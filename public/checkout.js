@@ -111,6 +111,16 @@ form.addEventListener("submit", async (event) => {
 
   const items = Array.from(cart.entries()).map(([productId, quantity]) => ({ productId, quantity }));
   const payload = new FormData(form);
+  const addressParts = [
+    payload.get("street"),
+    payload.get("streetNumber"),
+    payload.get("apartment"),
+    payload.get("city"),
+    payload.get("department"),
+  ]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+  payload.set("address", addressParts.join(", "));
   payload.set("items", JSON.stringify(items));
 
   try {
