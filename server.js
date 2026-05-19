@@ -116,6 +116,74 @@ function getSeedPaymentOrder() {
   };
 }
 
+const simulatedOrders = [
+  {
+    transactionId: "SIM-LP-001",
+    fullName: "Maria Fernanda Lopez",
+    phone: "+591 76543210",
+    email: "maria.lopez@example.com",
+    address: "Av. Arce 2150, Sopocachi, La Paz, La Paz",
+    latitude: -16.50949,
+    longitude: -68.12331,
+    total: 750,
+    status: "Pending",
+    paymentStatus: "Pending",
+    createdAt: "2026-05-16T10:30:00-04:00",
+    notes: "Customer requested delivery in the afternoon.",
+    items: [{ productId: "professional-kitchen-faucet", quantity: 1 }],
+  },
+  {
+    transactionId: "SIM-SC-002",
+    fullName: "Jorge Luis Mercado",
+    phone: "+591 72114598",
+    email: "jorge.mercado@example.com",
+    address: "Calle Libertad 420, Equipetrol, Santa Cruz de la Sierra, Santa Cruz",
+    latitude: -17.75672,
+    longitude: -63.19964,
+    total: 1290,
+    status: "In review",
+    paymentStatus: "In review",
+    createdAt: "2026-05-17T15:15:00-04:00",
+    notes: "Voucher received, pending transfer verification.",
+    receiptPath: "/uploads/sample-voucher-simulated",
+    items: [{ productId: "tramontina-new-dritta-isla-90", quantity: 1 }],
+  },
+  {
+    transactionId: "SIM-CB-003",
+    fullName: "Andrea Vargas Rojas",
+    phone: "+591 70778811",
+    email: "andrea.vargas@example.com",
+    address: "Av. America 1523, Cala Cala, Cochabamba, Cochabamba",
+    latitude: -17.37191,
+    longitude: -66.1568,
+    total: 950,
+    status: "Delivered",
+    paymentStatus: "Paid",
+    createdAt: "2026-05-13T09:45:00-04:00",
+    deliveredAt: "2026-05-15",
+    deliveredBy: "Delivery team",
+    deliveryLocation: "Received by building reception",
+    deliveryNotes: "Delivered after 2 business days from payment confirmation.",
+    notes: "Customer requested receipt copy by email.",
+    items: [{ productId: "tramontina-new-dritta-wall-90", quantity: 1 }],
+  },
+  {
+    transactionId: "SIM-OR-004",
+    fullName: "Carlos Eduardo Salinas",
+    phone: "+591 67223344",
+    email: "carlos.salinas@example.com",
+    address: "Calle Bolivar 880, Centro, Oruro, Oruro",
+    latitude: -17.97098,
+    longitude: -67.11103,
+    total: 1360,
+    status: "Pending",
+    paymentStatus: "Pending",
+    createdAt: "2026-05-18T11:20:00-04:00",
+    notes: "Client asked for delivery confirmation call before dispatch.",
+    items: [{ productId: "tramontina-penta-glass-flat-5gg-90", quantity: 2 }],
+  },
+];
+
 let pool;
 let dbReady = false;
 const memory = { customers: [], orders: [], items: [], nextCustomerId: 1, nextOrderId: 1 };
@@ -288,6 +356,7 @@ async function initDb() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_notes TEXT;
   `);
   await seedPaymentOrder();
+  await seedSimulatedOrders();
   dbReady = true;
 }
 
@@ -332,6 +401,66 @@ async function seedPaymentOrder() {
        VALUES ($1, $2, $3, $4, 1, $4)`,
       [orderResult.rows[0].id, "payment-transfer-1500", seededPaymentOrder.itemName, seededPaymentOrder.total]
     );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function seedSimulatedOrders() {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (const sample of simulatedOrders) {
+      const exists = await client.query("SELECT id FROM orders WHERE transaction_id = $1 LIMIT 1", [sample.transactionId]);
+      if (exists.rowCount) continue;
+      const customerResult = await client.query(
+        `INSERT INTO customers (full_name, phone, email)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name, phone = EXCLUDED.phone
+         RETURNING id`,
+        [sample.fullName, sample.phone, sample.email]
+      );
+      const orderResult = await client.query(
+        `INSERT INTO orders (
+          customer_id, status, total, address, latitude, longitude, notes,
+          payment_status, payment_method, receipt_path, payer_name, transaction_id,
+          delivered_at, delivered_by, delivery_location, delivery_notes, created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'Bank transfer', $9, $10, $11, $12, $13, $14, $15, $16)
+        RETURNING id`,
+        [
+          customerResult.rows[0].id,
+          sample.status,
+          sample.total,
+          sample.address,
+          sample.latitude,
+          sample.longitude,
+          sample.notes,
+          sample.paymentStatus,
+          sample.receiptPath || null,
+          sample.fullName,
+          sample.transactionId,
+          sample.deliveredAt || null,
+          sample.deliveredBy || null,
+          sample.deliveryLocation || null,
+          sample.deliveryNotes || null,
+          sample.createdAt,
+        ]
+      );
+      for (const item of sample.items) {
+        const product = getProduct(item.productId);
+        if (!product) continue;
+        await client.query(
+          `INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity, line_total)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [orderResult.rows[0].id, product.id, product.name, product.price, item.quantity, product.price * item.quantity]
+        );
+      }
+    }
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK");
@@ -589,6 +718,55 @@ function seedMemoryPaymentOrder() {
   });
 }
 
+function seedMemorySimulatedOrders() {
+  for (const sample of simulatedOrders) {
+    if (memory.orders.some((order) => order.transaction_id === sample.transactionId)) continue;
+    const customer = {
+      id: memory.nextCustomerId++,
+      full_name: sample.fullName,
+      phone: sample.phone,
+      email: sample.email,
+      created_at: sample.createdAt,
+    };
+    const order = {
+      id: memory.nextOrderId++,
+      customer_id: customer.id,
+      status: sample.status,
+      total: sample.total,
+      address: sample.address,
+      latitude: sample.latitude,
+      longitude: sample.longitude,
+      notes: sample.notes,
+      payment_status: sample.paymentStatus,
+      payment_date: null,
+      payment_reference: null,
+      payment_method: "Bank transfer",
+      receipt_path: sample.receiptPath || null,
+      payer_name: sample.fullName,
+      transaction_id: sample.transactionId,
+      delivered_at: sample.deliveredAt || null,
+      delivered_by: sample.deliveredBy || null,
+      delivery_location: sample.deliveryLocation || null,
+      delivery_notes: sample.deliveryNotes || null,
+      created_at: sample.createdAt,
+    };
+    memory.customers.push(customer);
+    memory.orders.push(order);
+    for (const item of sample.items) {
+      const product = getProduct(item.productId);
+      if (!product) continue;
+      memory.items.push({
+        order_id: order.id,
+        product_id: product.id,
+        product_name: product.name,
+        unit_price: product.price,
+        quantity: item.quantity,
+        line_total: product.price * item.quantity,
+      });
+    }
+  }
+}
+
 async function updateDelivery(orderId, delivered, deliveredAt, deliveredBy, deliveryLocation, deliveryNotes) {
   const deliveryDate = delivered ? deliveredAt || new Date().toISOString() : null;
   if (!dbReady) {
@@ -763,7 +941,10 @@ initDb()
     console.warn(error.message);
   })
   .finally(() => {
-    if (!dbReady) seedMemoryPaymentOrder();
+    if (!dbReady) {
+      seedMemoryPaymentOrder();
+      seedMemorySimulatedOrders();
+    }
     app.listen(PORT, () => {
       console.log(`Store ready at http://localhost:${PORT}`);
       console.log(`Admin login at http://localhost:${PORT}/admin`);
