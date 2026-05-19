@@ -740,6 +740,37 @@ body {
   font-weight: 900;
 }
 
+.review-box {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(184, 137, 66, 0.24);
+  background: rgba(184, 137, 66, 0.1);
+  border-radius: 8px;
+}
+
+.review-box span {
+  color: var(--muted);
+}
+
+.payment-next-box {
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background: rgba(15, 118, 110, 0.06);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.payment-next-box h3 {
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.payment-next-box p:not(.eyebrow) {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
 .account-card {
   max-width: 520px;
 }

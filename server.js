@@ -700,6 +700,34 @@ app.get("/api/account/orders", requireCustomer, async (req, res) => {
   res.json({ ok: true, orders: userOrders });
 });
 
+app.post("/api/account/orders/:id/receipt", requireCustomer, upload.single("receipt"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, message: "Receipt file is required." });
+  const receiptPath = `/uploads/${req.file.filename}`;
+
+  if (!dbReady) {
+    const order = memory.orders.find((item) => item.id === Number(req.params.id));
+    const customer = order && memory.customers.find((item) => item.id === order.customer_id);
+    if (!order || customer?.email !== req.customerSession.email) return res.status(404).json({ ok: false, message: "Order not found." });
+    order.receipt_path = receiptPath;
+    order.payment_status = "In review";
+    order.status = "In review";
+    return res.json({ ok: true, order });
+  }
+
+  const result = await pool.query(
+    `UPDATE orders o
+     SET receipt_path = $3,
+         payment_status = 'In review',
+         status = 'In review'
+     FROM customers c
+     WHERE o.id = $1 AND o.customer_id = c.id AND c.email = $2
+     RETURNING o.id, o.status, o.payment_status, o.receipt_path`,
+    [req.params.id, req.customerSession.email, receiptPath]
+  );
+  if (!result.rows[0]) return res.status(404).json({ ok: false, message: "Order not found." });
+  res.json({ ok: true, order: result.rows[0] });
+});
+
 app.post("/api/orders", upload.single("receipt"), async (req, res) => {
   try {
     const payload = req.file ? { ...req.body, items: JSON.parse(req.body.items || "[]") } : req.body;

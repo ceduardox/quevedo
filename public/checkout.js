@@ -131,13 +131,13 @@ form.addEventListener("submit", async (event) => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Order could not be sent.");
     messageEl.classList.add("success");
-    messageEl.textContent = `Order #${result.orderId} received. Total: ${money.format(result.total)}.`;
+    messageEl.textContent = `Order #${result.orderId} created. Redirecting to your account...`;
     cart.clear();
     saveCart();
     form.reset();
     setTimeout(() => {
-      window.location.href = "/";
-    }, 1800);
+      window.location.href = "/account";
+    }, 900);
   } catch (error) {
     messageEl.classList.add("error");
     messageEl.textContent = error.message;
