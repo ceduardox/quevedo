@@ -112,10 +112,6 @@ function getSeedPaymentOrder() {
     total: Number(process.env.SEED_PAYMENT_TOTAL || 0),
     paymentReference: process.env.SEED_PAYMENT_REFERENCE || "Imported payment",
     itemName: process.env.SEED_PAYMENT_ITEM_NAME || "Imported paid order",
-    deliveredAt: process.env.SEED_PAYMENT_DELIVERED_AT || null,
-    deliveredBy: process.env.SEED_PAYMENT_DELIVERED_BY || null,
-    deliveryLocation: process.env.SEED_PAYMENT_DELIVERY_LOCATION || null,
-    deliveryNotes: process.env.SEED_PAYMENT_DELIVERY_NOTES || null,
   };
 }
 
@@ -274,7 +270,7 @@ async function seedPaymentOrder() {
         payment_reference, payer_name, transaction_id, delivered_at,
         delivered_by, delivery_location, delivery_notes, created_at
        )
-       VALUES ($1, $9, $2, $3, $4, 'Pending', $5, $6, $7, $8, $10, $11, $12, $13, $5)
+       VALUES ($1, 'Paid', $2, $3, $4, 'Pending', $5, $6, $7, $8, NULL, NULL, NULL, NULL, $5)
        RETURNING id`,
       [
         customerId,
@@ -285,11 +281,6 @@ async function seedPaymentOrder() {
         seededPaymentOrder.paymentReference,
         seededPaymentOrder.payerName,
         seededPaymentOrder.transactionId,
-        seededPaymentOrder.deliveredAt ? "Delivered" : "Paid",
-        seededPaymentOrder.deliveredAt,
-        seededPaymentOrder.deliveredBy,
-        seededPaymentOrder.deliveryLocation,
-        seededPaymentOrder.deliveryNotes,
       ]
     );
     await client.query(
@@ -512,7 +503,7 @@ function seedMemoryPaymentOrder() {
   const order = {
     id: memory.nextOrderId++,
     customer_id: customer.id,
-    status: seededPaymentOrder.deliveredAt ? "Delivered" : "Paid",
+    status: "Paid",
     total: seededPaymentOrder.total,
     address: "Bolivia - department not specified",
     latitude: null,
@@ -523,10 +514,10 @@ function seedMemoryPaymentOrder() {
     payment_reference: seededPaymentOrder.paymentReference,
     payer_name: seededPaymentOrder.payerName,
     transaction_id: seededPaymentOrder.transactionId,
-    delivered_at: seededPaymentOrder.deliveredAt,
-    delivered_by: seededPaymentOrder.deliveredBy,
-    delivery_location: seededPaymentOrder.deliveryLocation,
-    delivery_notes: seededPaymentOrder.deliveryNotes,
+    delivered_at: null,
+    delivered_by: null,
+    delivery_location: null,
+    delivery_notes: null,
     created_at: seededPaymentOrder.paymentDate,
   };
   memory.customers.push(customer);

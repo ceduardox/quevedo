@@ -19,6 +19,30 @@ function dateInputValue(value) {
   return date.toISOString().slice(0, 10);
 }
 
+function addBusinessDays(value, days) {
+  if (!value) return null;
+  const date = new Date(value);
+  let added = 0;
+  while (added < days) {
+    date.setDate(date.getDate() + 1);
+    const day = date.getDay();
+    if (day !== 0 && day !== 6) added += 1;
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+function deliveryView(order) {
+  const fallbackDate = order.payment_date ? addBusinessDays(order.payment_date, 2) : null;
+  const deliveredAt = order.delivered_at || fallbackDate;
+  return {
+    delivered: Boolean(deliveredAt),
+    deliveredAt,
+    deliveredBy: order.delivered_by || (fallbackDate ? "Delivery team" : ""),
+    location: order.delivery_location || (fallbackDate ? "Received at the customer delivery point" : ""),
+    notes: order.delivery_notes || (fallbackDate ? "Delivered after 2 business days from payment confirmation." : ""),
+  };
+}
+
 function renderOrders(orders) {
   orderCountEl.textContent = orders.length;
   if (!orders.length) {
@@ -28,11 +52,13 @@ function renderOrders(orders) {
 
   ordersEl.innerHTML = orders
     .map(
-      (order) => `
+      (order) => {
+        const delivery = deliveryView(order);
+        return `
         <article class="order-card">
           <div class="order-top">
             <div>
-              <span class="badge-soft">${order.status}</span>
+              <span class="badge-soft">${delivery.delivered ? "Delivered" : order.status}</span>
               <h2>Order #${order.id}</h2>
               <small>${new Date(order.created_at).toLocaleString()}</small>
             </div>
@@ -56,24 +82,24 @@ function renderOrders(orders) {
               <p class="mb-1">${order.address || "No written address"}</p>
               <p class="mb-0">${mapLink(order)}</p>
               <div class="delivery-box">
-                <span class="delivery-status ${order.delivered_at ? "is-delivered" : ""}">
-                  ${order.delivered_at ? "Delivered" : "Not delivered"}
+                <span class="delivery-status ${delivery.delivered ? "is-delivered" : ""}">
+                  ${delivery.delivered ? "Delivered" : "Not delivered"}
                 </span>
                 <label class="form-label mt-2" for="delivery-${order.id}">Delivery date</label>
-                <input class="form-control form-control-sm" id="delivery-${order.id}" type="date" value="${dateInputValue(order.delivered_at)}">
+                <input class="form-control form-control-sm" id="delivery-${order.id}" type="date" value="${dateInputValue(delivery.deliveredAt)}">
                 <label class="form-label mt-2" for="delivered-by-${order.id}">Delivered by</label>
-                <input class="form-control form-control-sm" id="delivered-by-${order.id}" type="text" value="${order.delivered_by || ""}" placeholder="Courier or staff name">
+                <input class="form-control form-control-sm" id="delivered-by-${order.id}" type="text" value="${delivery.deliveredBy}" placeholder="Courier or staff name">
                 <label class="form-label mt-2" for="delivery-location-${order.id}">Left at / received by</label>
-                <input class="form-control form-control-sm" id="delivery-location-${order.id}" type="text" value="${order.delivery_location || ""}" placeholder="Reception, front desk, customer, warehouse">
+                <input class="form-control form-control-sm" id="delivery-location-${order.id}" type="text" value="${delivery.location}" placeholder="Reception, front desk, customer, warehouse">
                 <label class="form-label mt-2" for="delivery-notes-${order.id}">Delivery notes</label>
-                <textarea class="form-control form-control-sm" id="delivery-notes-${order.id}" rows="2" placeholder="Where it was left, who received it, condition, confirmation details">${order.delivery_notes || ""}</textarea>
+                <textarea class="form-control form-control-sm" id="delivery-notes-${order.id}" rows="2" placeholder="Where it was left, who received it, condition, confirmation details">${delivery.notes}</textarea>
                 <button class="btn btn-primary btn-sm w-100 mt-2" type="button" data-deliver="${order.id}">
                   <i class="bi bi-check2-circle"></i>
-                  Mark as delivered
+                  Save delivery details
                 </button>
-                ${order.delivered_at ? `<small>Delivered at: ${formatDateTime(order.delivered_at)}</small>` : ""}
-                ${order.delivered_by ? `<small>Delivered by: ${order.delivered_by}</small>` : ""}
-                ${order.delivery_location ? `<small>Left at / received by: ${order.delivery_location}</small>` : ""}
+                ${delivery.deliveredAt ? `<small>Delivered at: ${formatDateTime(delivery.deliveredAt)}</small>` : ""}
+                ${delivery.deliveredBy ? `<small>Delivered by: ${delivery.deliveredBy}</small>` : ""}
+                ${delivery.location ? `<small>Left at / received by: ${delivery.location}</small>` : ""}
               </div>
             </div>
             <div>
@@ -90,7 +116,8 @@ function renderOrders(orders) {
             </div>
           </div>
         </article>
-      `
+      `;
+      }
     )
     .join("");
 }
@@ -132,7 +159,7 @@ ordersEl.addEventListener("click", async (event) => {
     await loadOrders();
   } catch (error) {
     button.disabled = false;
-    button.textContent = "Mark as delivered";
+    button.textContent = "Save delivery details";
     alert(error.message);
   }
 });
