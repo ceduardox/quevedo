@@ -102,25 +102,6 @@
                 </div>
               </div>
 
-              <div class="bank-transfer-box mt-4">
-                <div>
-                  <p class="eyebrow">Bank transfer</p>
-                  <h3>Company bank account</h3>
-                </div>
-                <dl>
-                  <div><dt>Bank name</dt><dd>Citibank</dd></div>
-                  <div><dt>Bank address</dt><dd>111 Wall Street New York, NY 10043 USA</dd></div>
-                  <div><dt>ABA routing number</dt><dd>031100209</dd></div>
-                  <div><dt>SWIFT code</dt><dd>CITIUS33</dd></div>
-                  <div><dt>Account number</dt><dd>70588040002228010</dd></div>
-                  <div><dt>Account type</dt><dd>CHECKING</dd></div>
-                  <div><dt>Beneficiary</dt><dd>IMPORTADORA QUEVEDO LLC</dd></div>
-                </dl>
-                <input type="hidden" name="paymentMethod" value="Bank transfer" />
-                <label class="form-label" for="receipt">Upload payment receipt</label>
-                <input class="form-control" id="receipt" name="receipt" type="file" accept="image/*,.pdf" />
-              </div>
-
               <div class="map-block mt-4">
                 <div class="map-toolbar">
                   <div>
@@ -138,6 +119,7 @@
 
               <input type="hidden" id="latitude" name="latitude" />
               <input type="hidden" id="longitude" name="longitude" />
+              <input type="hidden" name="paymentMethod" value="Bank transfer" />
               <button class="btn btn-primary btn-lg w-100 mt-4" type="submit">
                 <i class="bi bi-bag-check"></i>
                 Place order
@@ -161,6 +143,24 @@
               <div><span>Subtotal</span><strong id="subtotalValue">$0</strong></div>
               <div><span>Delivery</span><strong>To confirm</strong></div>
               <div class="summary-total"><span>Total</span><strong id="totalValue">$0</strong></div>
+            </div>
+            <div class="bank-transfer-box mt-4">
+              <div>
+                <p class="eyebrow">Bank transfer</p>
+                <h3>Transfer to this account</h3>
+                <p class="bank-help">After reviewing your order total, make the transfer and upload the payment voucher here.</p>
+              </div>
+              <dl>
+                <div><dt>Bank name</dt><dd>Citibank</dd></div>
+                <div><dt>Bank address</dt><dd>111 Wall Street New York, NY 10043 USA</dd></div>
+                <div><dt>ABA routing number</dt><dd>031100209</dd></div>
+                <div><dt>SWIFT code</dt><dd>CITIUS33</dd></div>
+                <div><dt>Account number</dt><dd>70588040002228010</dd></div>
+                <div><dt>Account type</dt><dd>CHECKING</dd></div>
+                <div><dt>Beneficiary</dt><dd>IMPORTADORA QUEVEDO LLC</dd></div>
+              </dl>
+              <label class="form-label" for="receipt">Upload payment voucher</label>
+              <input class="form-control" id="receipt" name="receipt" type="file" accept="image/*,.pdf" form="orderForm" />
             </div>
           </div>
         </aside>

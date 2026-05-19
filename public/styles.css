@@ -711,6 +711,11 @@ body {
   font-weight: 900;
 }
 
+.bank-help {
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+
 .bank-transfer-box dl {
   display: grid;
   gap: 8px;
@@ -719,7 +724,7 @@ body {
 
 .bank-transfer-box dl div {
   display: grid;
-  grid-template-columns: 170px 1fr;
+  grid-template-columns: 135px 1fr;
   gap: 10px;
   border-bottom: 1px solid rgba(15, 118, 110, 0.12);
   padding-bottom: 8px;
