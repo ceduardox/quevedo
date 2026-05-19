@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Login | EQ Home Store</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="login-body">
+    <main class="login-shell">
+      <section class="login-card">
+        <img src="/media/logo_1757914521356--Bodoo3y.png" alt="EQ Home Store logo" />
+        <p class="eyebrow">Private area</p>
+        <h1>Admin login</h1>
+        <form id="loginForm" class="mt-4">
+          <label class="form-label" for="username">Username</label>
+          <input class="form-control mb-3" id="username" name="username" autocomplete="username" required />
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control mb-4" id="password" name="password" type="password" autocomplete="current-password" required />
+          <button class="btn btn-primary w-100" type="submit">
+            <i class="bi bi-lock"></i>
+            Enter dashboard
+          </button>
+          <div id="loginMessage" class="form-message mt-3" role="status"></div>
+        </form>
+      </section>
+    </main>
+    <script src="/admin-login.js"></script>
+  </body>
+</html>

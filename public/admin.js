@@ -1,20 +1,19 @@
 const ordersEl = document.querySelector("#orders");
 const orderCountEl = document.querySelector("#orderCount");
 const dbModeEl = document.querySelector("#dbMode");
-const params = new URLSearchParams(window.location.search);
-const key = params.get("key") || "";
+const logoutButton = document.querySelector("#logoutButton");
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 function mapLink(order) {
-  if (!order.latitude || !order.longitude) return "Sin ubicacion GPS";
+  if (!order.latitude || !order.longitude) return "No GPS location";
   const url = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`;
-  return `<a href="${url}" target="_blank" rel="noreferrer">Ver en Google Maps</a>`;
+  return `<a href="${url}" target="_blank" rel="noreferrer">Open in Google Maps</a>`;
 }
 
 function renderOrders(orders) {
   orderCountEl.textContent = orders.length;
   if (!orders.length) {
-    ordersEl.innerHTML = `<div class="order-card">Todavia no hay pedidos.</div>`;
+    ordersEl.innerHTML = `<div class="order-card">No orders yet.</div>`;
     return;
   }
 
@@ -25,25 +24,25 @@ function renderOrders(orders) {
           <div class="order-top">
             <div>
               <span class="badge-soft">${order.status}</span>
-              <h2>Pedido #${order.id}</h2>
+              <h2>Order #${order.id}</h2>
               <small>${new Date(order.created_at).toLocaleString()}</small>
             </div>
             <div class="order-total">${money.format(order.total)}</div>
           </div>
           <div class="order-grid">
             <div>
-              <div class="order-label">Cliente</div>
+              <div class="order-label">Customer</div>
               <strong>${order.customer?.full_name || ""}</strong><br>
               <span>${order.customer?.phone || ""}</span><br>
               <span>${order.customer?.email || ""}</span>
             </div>
             <div>
-              <div class="order-label">Ubicacion</div>
-              <p class="mb-1">${order.address || "Sin direccion escrita"}</p>
+              <div class="order-label">Delivery</div>
+              <p class="mb-1">${order.address || "No written address"}</p>
               <p class="mb-0">${mapLink(order)}</p>
             </div>
             <div>
-              <div class="order-label">Productos</div>
+              <div class="order-label">Products</div>
               <ul class="order-items">
                 ${order.items
                   .map(
@@ -52,7 +51,7 @@ function renderOrders(orders) {
                   )
                   .join("")}
               </ul>
-              ${order.notes ? `<p class="mt-2 mb-0"><strong>Notas:</strong> ${order.notes}</p>` : ""}
+              ${order.notes ? `<p class="mt-2 mb-0"><strong>Notes:</strong> ${order.notes}</p>` : ""}
             </div>
           </div>
         </article>
@@ -63,14 +62,23 @@ function renderOrders(orders) {
 
 async function loadOrders() {
   try {
-    const response = await fetch(`/api/admin/orders?key=${encodeURIComponent(key)}`);
+    const response = await fetch("/api/admin/orders");
     const result = await response.json();
-    if (!response.ok) throw new Error(result.message || "No se pudieron cargar los pedidos.");
-    dbModeEl.textContent = result.database === "postgres" ? "PostgreSQL" : "Demo memoria";
+    if (response.status === 401) {
+      window.location.href = "/admin";
+      return;
+    }
+    if (!response.ok) throw new Error(result.message || "Orders could not be loaded.");
+    dbModeEl.textContent = result.database === "postgres" ? "PostgreSQL" : "Memory demo";
     renderOrders(result.orders);
   } catch (error) {
     ordersEl.innerHTML = `<div class="order-card text-danger">${error.message}</div>`;
   }
 }
+
+logoutButton.addEventListener("click", async () => {
+  await fetch("/api/admin/logout", { method: "POST" });
+  window.location.href = "/admin";
+});
 
 loadOrders();

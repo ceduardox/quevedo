@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,112 +13,174 @@
     <nav class="navbar navbar-expand-lg sticky-top">
       <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-          <img src="/media/logo_1757914521356--Bodoo3y.png" alt="Logo" />
+          <img src="/media/logo_1757914521356--Bodoo3y.png" alt="EQ Home Store logo" />
           <span>EQ Home Store</span>
         </a>
-        <a class="btn btn-dark btn-sm" href="/admin.html?key=admin123">
-          <i class="bi bi-speedometer2"></i>
-          Admin
-        </a>
+        <div class="nav-actions">
+          <a class="btn btn-outline-dark btn-sm" href="#products">Shop</a>
+          <button class="btn btn-dark btn-sm cart-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer">
+            <i class="bi bi-bag"></i>
+            Cart
+            <span id="cartCount">0</span>
+          </button>
+          <a class="btn btn-outline-dark btn-sm" href="/admin">Admin</a>
+        </div>
       </div>
     </nav>
 
     <header class="hero">
       <div class="hero-bg"></div>
       <div class="container hero-content">
-        <div class="row align-items-end">
+        <div class="row align-items-end g-4">
           <div class="col-lg-7">
-            <p class="eyebrow">Linea premium para cocina y bano</p>
-            <h1>Productos modernos listos para pedir online</h1>
-            <p class="lead">Elige tus productos, registra tus datos, marca tu ubicacion y el pedido llega directo al panel admin.</p>
+            <p class="eyebrow">Premium kitchen and bath fixtures</p>
+            <h1>Upgrade your space with a polished pro collection.</h1>
+            <p class="lead">Browse the catalog, add products to your cart, then complete delivery details only when you are ready to place the order.</p>
+            <div class="hero-actions">
+              <a class="btn btn-light btn-lg" href="#products">Shop Collection</a>
+              <button class="btn btn-outline-light btn-lg" type="button" data-add-combo>Build $1,500 Pro Set</button>
+            </div>
           </div>
           <div class="col-lg-4 offset-lg-1">
             <div class="hero-ticket">
-              <span>Combo Pro</span>
+              <span>Featured bundle</span>
               <strong>$1,500</strong>
-              <small>Faucet + Sink</small>
+              <small>Professional Faucet + Satin Sink</small>
             </div>
           </div>
         </div>
       </div>
     </header>
 
-    <main class="container py-5">
-      <div class="section-heading">
+    <main>
+      <section class="container ecommerce-strip" aria-label="Store benefits">
         <div>
-          <p class="eyebrow">Catalogo</p>
-          <h2>Selecciona lo que deseas pedir</h2>
+          <i class="bi bi-truck"></i>
+          <strong>Delivery ready</strong>
+          <span>GPS or manual location</span>
         </div>
-        <div class="total-pill">
-          <span>Total</span>
-          <strong id="cartTotal">$0</strong>
+        <div>
+          <i class="bi bi-shield-check"></i>
+          <strong>Pro selection</strong>
+          <span>Premium finishes</span>
         </div>
-      </div>
+        <div>
+          <i class="bi bi-receipt"></i>
+          <strong>Instant orders</strong>
+          <span>Sent to admin dashboard</span>
+        </div>
+      </section>
 
-      <section id="products" class="product-grid" aria-live="polite"></section>
-
-      <section class="checkout mt-5">
-        <div class="row g-4">
-          <div class="col-lg-5">
-            <div class="checkout-panel">
-              <p class="eyebrow">Pedido</p>
-              <h2>Datos del cliente</h2>
-              <form id="orderForm" class="mt-3">
-                <div class="row g-3">
-                  <div class="col-12">
-                    <label class="form-label" for="fullName">Nombre completo</label>
-                    <input class="form-control" id="fullName" name="fullName" required />
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label" for="phone">Telefono</label>
-                    <input class="form-control" id="phone" name="phone" required />
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label" for="email">Correo</label>
-                    <input class="form-control" id="email" name="email" type="email" required />
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label" for="password">Crear cuenta con clave</label>
-                    <input class="form-control" id="password" name="password" type="password" placeholder="Opcional" />
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label" for="address">Direccion / referencia</label>
-                    <textarea class="form-control" id="address" name="address" rows="2"></textarea>
-                  </div>
-                  <div class="col-12">
-                    <label class="form-label" for="notes">Notas del pedido</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
-                  </div>
-                </div>
-                <input type="hidden" id="latitude" name="latitude" />
-                <input type="hidden" id="longitude" name="longitude" />
-                <button class="btn btn-primary w-100 mt-4" type="submit">
-                  <i class="bi bi-bag-check"></i>
-                  Enviar pedido
-                </button>
-                <div id="formMessage" class="form-message mt-3" role="status"></div>
-              </form>
-            </div>
+      <section class="container py-5" id="products">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Shop now</p>
+            <h2>Featured products</h2>
           </div>
-          <div class="col-lg-7">
-            <div class="map-panel">
-              <div class="map-toolbar">
-                <div>
-                  <p class="eyebrow">Ubicacion</p>
-                  <h2>Selecciona tu punto de entrega</h2>
-                </div>
-                <button class="btn btn-outline-dark" id="gpsButton" type="button">
-                  <i class="bi bi-crosshair"></i>
-                  GPS
-                </button>
+          <div class="total-pill">
+            <span>Cart total</span>
+            <strong id="cartTotal">$0</strong>
+          </div>
+        </div>
+        <div id="productsGrid" class="product-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="checkout-shell" id="checkoutSection" hidden>
+        <div class="container py-5">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Checkout</p>
+              <h2>Complete your order</h2>
+            </div>
+            <button class="btn btn-outline-dark" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer">
+              <i class="bi bi-bag"></i>
+              Review cart
+            </button>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-lg-5">
+              <div class="checkout-panel">
+                <h3>Contact details</h3>
+                <form id="orderForm" class="mt-3">
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label" for="fullName">Full name</label>
+                      <input class="form-control" id="fullName" name="fullName" required />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="phone">Phone</label>
+                      <input class="form-control" id="phone" name="phone" required />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="email">Email</label>
+                      <input class="form-control" id="email" name="email" type="email" required />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="password">Create account password</label>
+                      <input class="form-control" id="password" name="password" type="password" placeholder="Optional" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="address">Delivery address or reference</label>
+                      <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label" for="notes">Order notes</label>
+                      <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                  </div>
+                  <input type="hidden" id="latitude" name="latitude" />
+                  <input type="hidden" id="longitude" name="longitude" />
+                  <button class="btn btn-primary w-100 mt-4" type="submit">
+                    <i class="bi bi-bag-check"></i>
+                    Place order
+                  </button>
+                  <div id="formMessage" class="form-message mt-3" role="status"></div>
+                </form>
               </div>
-              <div id="map"></div>
-              <p class="map-status" id="mapStatus">Puedes usar GPS o tocar el mapa para marcar la entrega.</p>
+            </div>
+            <div class="col-lg-7">
+              <div class="map-panel">
+                <div class="map-toolbar">
+                  <div>
+                    <p class="eyebrow">Delivery point</p>
+                    <h3>Select your location</h3>
+                  </div>
+                  <button class="btn btn-outline-dark" id="gpsButton" type="button">
+                    <i class="bi bi-crosshair"></i>
+                    Use GPS
+                  </button>
+                </div>
+                <div id="map"></div>
+                <p class="map-status" id="mapStatus">Use GPS or tap the map to mark your delivery point.</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </main>
+
+    <div class="offcanvas offcanvas-end cart-drawer" tabindex="-1" id="cartDrawer" aria-labelledby="cartDrawerLabel">
+      <div class="offcanvas-header">
+        <div>
+          <p class="eyebrow mb-1">Shopping cart</p>
+          <h2 class="offcanvas-title" id="cartDrawerLabel">Your items</h2>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <div id="cartItems" class="cart-items"></div>
+        <div class="cart-summary">
+          <div>
+            <span>Subtotal</span>
+            <strong id="drawerTotal">$0</strong>
+          </div>
+          <button id="checkoutButton" class="btn btn-primary w-100" type="button">
+            Continue to checkout
+          </button>
+        </div>
+      </div>
+    </div>
 
     <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="/vendor/leaflet/leaflet.js"></script>

@@ -8,44 +8,46 @@ const { Pool } = require("pg");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/eduardo_store";
-const ADMIN_KEY = process.env.ADMIN_KEY || "admin123";
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const SESSION_SECRET = process.env.SESSION_SECRET || "dev-session-secret";
 
 const products = [
   {
     id: "professional-kitchen-faucet",
     name: "Professional Kitchen Faucet",
-    category: "Linea Pro",
+    category: "Pro Collection",
     price: 750,
     badge: "Pro",
     image: "Professional Kitchen Faucet_1757915501686-qDncg0hK.png",
-    description: "Griferia profesional cromada para cocina moderna.",
+    description: "Polished professional faucet for premium kitchen projects.",
   },
   {
     id: "satin-finish-kitchen-sink",
     name: "Satin Finish Kitchen Sink",
-    category: "Linea Pro",
+    category: "Pro Collection",
     price: 750,
     badge: "Pro",
     image: "Satin Finish Kitchen Sink_1757915501686-BvzPqhJl.png",
-    description: "Lavaplatos satinado premium con acabado resistente.",
+    description: "Premium satin sink with a durable, refined finish.",
   },
   {
     id: "stainless-steel-kitchen-mixer",
     name: "Stainless Steel Kitchen Mixer",
-    category: "Cocina",
+    category: "Kitchen",
     price: 590,
-    badge: "Top venta",
+    badge: "Best Seller",
     image: "Stainless Steel Kitchen Mixer_1757915501686-BemfgtaI.png",
-    description: "Mezclador inoxidable de alto flujo para uso diario.",
+    description: "High-flow stainless mixer built for daily use.",
   },
   {
     id: "chrome-soap-dispenser",
     name: "Chrome Soap Dispenser",
-    category: "Accesorios",
+    category: "Accessories",
     price: 180,
-    badge: "Complemento",
+    badge: "Add-on",
     image: "Chrome Soap Dispenser_1757915501685-Jawrtdpi.png",
-    description: "Dispensador cromado para completar el set de cocina o bano.",
+    description: "Chrome dispenser to complete a kitchen or bath set.",
   },
 ];
 
@@ -54,6 +56,7 @@ let dbReady = false;
 const memory = { customers: [], orders: [], items: [], nextCustomerId: 1, nextOrderId: 1 };
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/media", express.static(__dirname));
 app.use("/vendor/bootstrap", express.static(path.join(__dirname, "node_modules", "bootstrap", "dist")));
@@ -82,6 +85,46 @@ function hashPassword(password) {
   return `pbkdf2_sha256$120000$${salt}$${hash}`;
 }
 
+function createAdminToken() {
+  const payload = Buffer.from(JSON.stringify({ user: ADMIN_USER, exp: Date.now() + 1000 * 60 * 60 * 12 })).toString("base64url");
+  const signature = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function parseCookies(req) {
+  return String(req.headers.cookie || "")
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .reduce((cookies, item) => {
+      const index = item.indexOf("=");
+      if (index > -1) cookies[item.slice(0, index)] = decodeURIComponent(item.slice(index + 1));
+      return cookies;
+    }, {});
+}
+
+function verifyAdminToken(token) {
+  try {
+    if (!token || !token.includes(".")) return false;
+    const [payload, signature] = token.split(".");
+    const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
+    if (signature.length !== expected.length) return false;
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return data.user === ADMIN_USER && data.exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function requireAdmin(req, res, next) {
+  const token = parseCookies(req).admin_session;
+  if (!verifyAdminToken(token)) {
+    return res.status(401).json({ ok: false, message: "Admin login required." });
+  }
+  next();
+}
+
 async function initDb() {
   pool = new Pool({ connectionString: DATABASE_URL });
   await pool.query(`
@@ -97,7 +140,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
       customer_id INTEGER REFERENCES customers(id),
-      status TEXT NOT NULL DEFAULT 'Nuevo',
+      status TEXT NOT NULL DEFAULT 'New',
       total NUMERIC(10,2) NOT NULL,
       address TEXT,
       latitude NUMERIC(11,8),
@@ -122,7 +165,7 @@ async function initDb() {
 async function createOrder(payload) {
   const selectedItems = normalizeItems(payload.items);
   if (!selectedItems.length) {
-    const error = new Error("Selecciona al menos un producto.");
+    const error = new Error("Select at least one product.");
     error.status = 400;
     throw error;
   }
@@ -131,7 +174,7 @@ async function createOrder(payload) {
   const phone = String(payload.phone || "").trim();
   const email = String(payload.email || "").trim().toLowerCase();
   if (!fullName || !phone || !email) {
-    const error = new Error("Nombre, telefono y correo son obligatorios.");
+    const error = new Error("Name, phone and email are required.");
     error.status = 400;
     throw error;
   }
@@ -216,7 +259,7 @@ function createMemoryOrder(orderData) {
   const order = {
     id: memory.nextOrderId++,
     customer_id: customer.id,
-    status: "Nuevo",
+    status: "New",
     total: orderData.total,
     address: orderData.address,
     latitude: orderData.latitude,
@@ -301,32 +344,56 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true, database: dbReady ? "postgres" : "memory-demo" });
 });
 
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin-login.html"));
+});
+
+app.get("/admin/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
+app.post("/api/admin/login", (req, res) => {
+  const username = String(req.body.username || "");
+  const password = String(req.body.password || "");
+  if (username !== ADMIN_USER || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ ok: false, message: "Invalid username or password." });
+  }
+  res.setHeader("Set-Cookie", `admin_session=${encodeURIComponent(createAdminToken())}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`);
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  res.setHeader("Set-Cookie", "admin_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/me", requireAdmin, (req, res) => {
+  res.json({ ok: true, user: ADMIN_USER });
+});
+
 app.post("/api/orders", async (req, res) => {
   try {
     const order = await createOrder(req.body);
     res.status(201).json({ ok: true, orderId: order.id, total: Number(order.total) });
   } catch (error) {
-    res.status(error.status || 500).json({ ok: false, message: error.message || "No se pudo crear el pedido." });
+    res.status(error.status || 500).json({ ok: false, message: error.message || "Order could not be created." });
   }
 });
 
-app.get("/api/admin/orders", async (req, res) => {
-  if (req.query.key !== ADMIN_KEY) {
-    return res.status(401).json({ ok: false, message: "Clave de admin invalida." });
-  }
+app.get("/api/admin/orders", requireAdmin, async (req, res) => {
   const orders = await listOrders();
   res.json({ ok: true, database: dbReady ? "postgres" : "memory-demo", orders });
 });
 
 initDb()
   .catch((error) => {
-    console.warn("PostgreSQL no esta disponible. La app iniciara en modo demo en memoria.");
+    console.warn("PostgreSQL is not available. The app will start in memory demo mode.");
     console.warn(error.message);
   })
   .finally(() => {
     app.listen(PORT, () => {
-      console.log(`Tienda lista en http://localhost:${PORT}`);
-      console.log(`Admin en http://localhost:${PORT}/admin.html?key=${ADMIN_KEY}`);
-      console.log(`Base de datos: ${dbReady ? "PostgreSQL" : "modo demo en memoria"}`);
+      console.log(`Store ready at http://localhost:${PORT}`);
+      console.log(`Admin login at http://localhost:${PORT}/admin`);
+      console.log(`Database: ${dbReady ? "PostgreSQL" : "memory demo mode"}`);
     });
   });
