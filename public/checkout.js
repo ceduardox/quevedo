@@ -91,7 +91,7 @@ function renderSummary() {
     .map(
       ({ product, quantity }) => `
         <article class="summary-item">
-          <img src="/media/${encodeURIComponent(product.image)}" alt="${product.name}">
+          <img src="${product.image}" alt="${product.name}" loading="lazy">
           <div>
             <strong>${product.name}</strong>
             <span>${quantity} x ${money.format(product.price)}</span>

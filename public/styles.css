@@ -24,8 +24,8 @@ body {
 }
 
 .navbar-brand img {
-  width: 42px;
-  height: 42px;
+  width: 74px;
+  height: 58px;
   object-fit: contain;
 }
 
@@ -74,7 +74,7 @@ body {
   inset: 0;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.76), rgba(0, 0, 0, 0.18)),
-    url("/media/luxury_bathroom_hero_image_d06ca2ad-BRu9mhtY.png") center / cover;
+    url("/assets/hero-bathroom.webp") center / cover;
 }
 
 .hero-content {
@@ -507,7 +507,7 @@ body {
   min-height: 100vh;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0.18)),
-    url("/media/luxury_bathroom_hero_image_d06ca2ad-BRu9mhtY.png") center / cover;
+    url("/assets/hero-bathroom.webp") center / cover;
   display: grid;
   place-items: center;
   padding: 24px;

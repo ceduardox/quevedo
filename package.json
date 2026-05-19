@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "optimize:images": "node scripts/optimize-images.js"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
@@ -14,5 +15,8 @@
     "express": "^5.1.0",
     "leaflet": "^1.9.4",
     "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
   }
 }

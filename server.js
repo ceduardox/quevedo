@@ -19,7 +19,7 @@ const products = [
     category: "Pro Collection",
     price: 750,
     badge: "Pro",
-    image: "Professional Kitchen Faucet_1757915501686-qDncg0hK.png",
+    image: "/assets/professional-kitchen-faucet.webp",
     description: "Polished professional faucet for premium kitchen projects.",
   },
   {
@@ -28,7 +28,7 @@ const products = [
     category: "Pro Collection",
     price: 750,
     badge: "Pro",
-    image: "Satin Finish Kitchen Sink_1757915501686-BvzPqhJl.png",
+    image: "/assets/satin-finish-kitchen-sink.webp",
     description: "Premium satin sink with a durable, refined finish.",
   },
   {
@@ -37,7 +37,7 @@ const products = [
     category: "Kitchen",
     price: 590,
     badge: "Best Seller",
-    image: "Stainless Steel Kitchen Mixer_1757915501686-BemfgtaI.png",
+    image: "/assets/stainless-steel-kitchen-mixer.webp",
     description: "High-flow stainless mixer built for daily use.",
   },
   {
@@ -46,7 +46,7 @@ const products = [
     category: "Accessories",
     price: 180,
     badge: "Add-on",
-    image: "Chrome Soap Dispenser_1757915501685-Jawrtdpi.png",
+    image: "/assets/chrome-soap-dispenser.webp",
     description: "Chrome dispenser to complete a kitchen or bath set.",
   },
 ];

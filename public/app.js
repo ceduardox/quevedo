@@ -37,7 +37,7 @@ function renderProduct(product) {
   return `
     <article class="product-card">
       <div class="product-media">
-        <img src="/media/${encodeURIComponent(product.image)}" alt="${product.name}">
+        <img src="${product.image}" alt="${product.name}" loading="lazy">
         <span class="badge-soft">${product.badge}</span>
       </div>
       <div class="product-body">
@@ -132,7 +132,7 @@ function updateCart() {
     .map(
       ({ product, quantity }) => `
         <article class="cart-item">
-          <img src="/media/${encodeURIComponent(product.image)}" alt="${product.name}">
+          <img src="${product.image}" alt="${product.name}" loading="lazy">
           <div>
             <strong>${product.name}</strong>
             <span>${money.format(product.price)} each</span>
