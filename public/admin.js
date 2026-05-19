@@ -2,6 +2,8 @@ const ordersEl = document.querySelector("#orders");
 const orderCountEl = document.querySelector("#orderCount");
 const dbModeEl = document.querySelector("#dbMode");
 const logoutButton = document.querySelector("#logoutButton");
+const manualOrderForm = document.querySelector("#manualOrderForm");
+const manualOrderMessage = document.querySelector("#manualOrderMessage");
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 function mapLink(order) {
@@ -163,6 +165,28 @@ ordersEl.addEventListener("click", async (event) => {
     button.disabled = false;
     button.textContent = "Save delivery details";
     alert(error.message);
+  }
+});
+
+manualOrderForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  manualOrderMessage.className = "form-message ms-2";
+  manualOrderMessage.textContent = "Saving order...";
+  try {
+    const response = await fetch("/api/admin/orders/manual", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.fromEntries(new FormData(manualOrderForm).entries())),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Manual order could not be created.");
+    manualOrderMessage.classList.add("success");
+    manualOrderMessage.textContent = `Order #${result.orderId} added.`;
+    manualOrderForm.reset();
+    await loadOrders();
+  } catch (error) {
+    manualOrderMessage.classList.add("error");
+    manualOrderMessage.textContent = error.message;
   }
 });
 

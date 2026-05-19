@@ -801,6 +801,121 @@ async function updateDelivery(orderId, delivered, deliveredAt, deliveredBy, deli
   return result.rows[0] || null;
 }
 
+async function createManualAdminOrder(payload) {
+  const fullName = String(payload.fullName || "").trim();
+  const phone = String(payload.phone || "Not provided").trim();
+  const email = String(payload.email || `manual-${Date.now()}@importadora.local`).trim().toLowerCase();
+  const total = Number(payload.total || 0);
+  const paymentDate = String(payload.paymentDate || "").trim();
+  const productName = String(payload.productName || "Manual paid order").trim();
+  if (!fullName || !total || !paymentDate) {
+    const error = new Error("Customer name, payment date and total are required.");
+    error.status = 400;
+    throw error;
+  }
+
+  const orderData = {
+    fullName,
+    phone,
+    email,
+    address: String(payload.address || "Bolivia - address pending").trim(),
+    notes: String(payload.notes || "Manual order added from admin.").trim(),
+    paymentReference: String(payload.paymentReference || "").trim(),
+    transactionId: String(payload.transactionId || `MANUAL-${Date.now()}`).trim(),
+    paymentDate,
+    total,
+    productName,
+  };
+
+  if (!dbReady) {
+    let customer = memory.customers.find((item) => item.email === orderData.email);
+    if (!customer) {
+      customer = {
+        id: memory.nextCustomerId++,
+        full_name: orderData.fullName,
+        phone: orderData.phone,
+        email: orderData.email,
+        created_at: orderData.paymentDate,
+      };
+      memory.customers.push(customer);
+    }
+    const order = {
+      id: memory.nextOrderId++,
+      customer_id: customer.id,
+      status: "Paid",
+      total: orderData.total,
+      address: orderData.address,
+      latitude: null,
+      longitude: null,
+      notes: orderData.notes,
+      payment_status: "Paid",
+      payment_date: orderData.paymentDate,
+      payment_reference: orderData.paymentReference,
+      payment_method: "Bank transfer",
+      receipt_path: null,
+      payer_name: orderData.fullName,
+      transaction_id: orderData.transactionId,
+      delivered_at: null,
+      delivered_by: null,
+      delivery_location: null,
+      delivery_notes: null,
+      created_at: orderData.paymentDate,
+    };
+    memory.orders.push(order);
+    memory.items.push({
+      order_id: order.id,
+      product_id: "manual-paid-order",
+      product_name: orderData.productName,
+      unit_price: orderData.total,
+      quantity: 1,
+      line_total: orderData.total,
+    });
+    return order;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const customerResult = await client.query(
+      `INSERT INTO customers (full_name, phone, email)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name, phone = EXCLUDED.phone
+       RETURNING id`,
+      [orderData.fullName, orderData.phone, orderData.email]
+    );
+    const orderResult = await client.query(
+      `INSERT INTO orders (
+        customer_id, status, total, address, notes, payment_status, payment_date,
+        payment_reference, payment_method, payer_name, transaction_id, created_at
+       )
+       VALUES ($1, 'Paid', $2, $3, $4, 'Paid', $5, $6, 'Bank transfer', $7, $8, $5)
+       RETURNING id`,
+      [
+        customerResult.rows[0].id,
+        orderData.total,
+        orderData.address,
+        orderData.notes,
+        orderData.paymentDate,
+        orderData.paymentReference,
+        orderData.fullName,
+        orderData.transactionId,
+      ]
+    );
+    await client.query(
+      `INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity, line_total)
+       VALUES ($1, 'manual-paid-order', $2, $3, 1, $3)`,
+      [orderResult.rows[0].id, orderData.productName, orderData.total]
+    );
+    await client.query("COMMIT");
+    return orderResult.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 app.get("/api/products", (req, res) => {
   res.json(products);
 });
@@ -919,6 +1034,15 @@ app.post("/api/orders", upload.single("receipt"), async (req, res) => {
 app.get("/api/admin/orders", requireAdmin, async (req, res) => {
   const orders = await listOrders();
   res.json({ ok: true, database: dbReady ? "postgres" : "memory-demo", orders });
+});
+
+app.post("/api/admin/orders/manual", requireAdmin, async (req, res) => {
+  try {
+    const order = await createManualAdminOrder(req.body);
+    res.status(201).json({ ok: true, orderId: order.id });
+  } catch (error) {
+    res.status(error.status || 500).json({ ok: false, message: error.message || "Manual order could not be created." });
+  }
 });
 
 app.patch("/api/admin/orders/:id/delivery", requireAdmin, async (req, res) => {

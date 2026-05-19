@@ -39,6 +39,64 @@
           <small>orders</small>
         </div>
       </div>
+      <section class="order-card manual-order-card">
+        <div class="checkout-card-head">
+          <div>
+            <p class="eyebrow">Manual payment</p>
+            <h2>Add bank transfer order</h2>
+          </div>
+          <i class="bi bi-receipt"></i>
+        </div>
+        <form id="manualOrderForm" class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="manualFullName">Customer / payer name</label>
+            <input class="form-control" id="manualFullName" name="fullName" placeholder="Customer full name" required />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="manualPhone">Phone</label>
+            <input class="form-control" id="manualPhone" name="phone" placeholder="Not provided" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="manualEmail">Email</label>
+            <input class="form-control" id="manualEmail" name="email" type="email" placeholder="optional@email.com" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="manualDate">Payment date</label>
+            <input class="form-control" id="manualDate" name="paymentDate" type="date" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="manualTotal">Total USD</label>
+            <input class="form-control" id="manualTotal" name="total" type="number" min="1" step="0.01" placeholder="1500" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="manualTransaction">Confirmation / transaction</label>
+            <input class="form-control" id="manualTransaction" name="transactionId" placeholder="Confirmation or transaction number" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="manualProduct">Product / order detail</label>
+            <input class="form-control" id="manualProduct" name="productName" placeholder="Premium kitchen order - paid transfer" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="manualAddress">Delivery address</label>
+            <input class="form-control" id="manualAddress" name="address" placeholder="Bolivia - address pending" />
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="manualReference">Payment reference</label>
+            <textarea class="form-control" id="manualReference" name="paymentReference" rows="2" placeholder="Bank transfer description or confirmation text"></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="manualNotes">Admin notes</label>
+            <textarea class="form-control" id="manualNotes" name="notes" rows="2" placeholder="Manual paid order imported from bank transfer screenshot."></textarea>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-plus-circle"></i>
+              Add paid order
+            </button>
+            <span id="manualOrderMessage" class="form-message ms-2"></span>
+          </div>
+        </form>
+      </section>
       <section id="orders" class="orders-list mt-4"></section>
     </main>
 

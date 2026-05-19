@@ -478,6 +478,10 @@ body {
   gap: 16px;
 }
 
+.manual-order-card {
+  margin-bottom: 20px;
+}
+
 .order-top {
   display: flex;
   justify-content: space-between;
