@@ -348,6 +348,10 @@ app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin-login.html"));
 });
 
+app.get("/checkout", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "checkout.html"));
+});
+
 app.get("/admin/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });

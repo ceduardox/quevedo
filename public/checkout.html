@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Complete Your Order | EQ Home Store</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="checkout-page">
+    <nav class="navbar navbar-expand-lg sticky-top">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+          <img src="/media/logo_1757914521356--Bodoo3y.png" alt="EQ Home Store logo" />
+          <span>EQ Home Store</span>
+        </a>
+        <div class="nav-actions">
+          <a class="btn btn-outline-dark btn-sm" href="/">
+            <i class="bi bi-arrow-left"></i>
+            Continue shopping
+          </a>
+          <a class="btn btn-outline-dark btn-sm" href="/admin">Admin</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-5">
+      <div class="checkout-head">
+        <div>
+          <p class="eyebrow">Secure checkout</p>
+          <h1>Complete your order</h1>
+          <p>Review your products, add delivery information, and send the order to the admin dashboard.</p>
+        </div>
+        <div class="checkout-steps" aria-label="Checkout steps">
+          <span class="active"><b>1</b> Cart</span>
+          <span class="active"><b>2</b> Details</span>
+          <span><b>3</b> Confirm</span>
+        </div>
+      </div>
+
+      <div id="emptyCheckout" class="empty-checkout" hidden>
+        <i class="bi bi-bag-x"></i>
+        <h2>Your cart is empty</h2>
+        <p>Add products from the collection before completing checkout.</p>
+        <a class="btn btn-dark" href="/">Return to store</a>
+      </div>
+
+      <div id="checkoutLayout" class="checkout-layout">
+        <section class="checkout-main">
+          <div class="checkout-card">
+            <div class="checkout-card-head">
+              <div>
+                <p class="eyebrow">Delivery</p>
+                <h2>Contact details</h2>
+              </div>
+              <i class="bi bi-person-lines-fill"></i>
+            </div>
+            <form id="orderForm">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label" for="fullName">Full name</label>
+                  <input class="form-control form-control-lg" id="fullName" name="fullName" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="phone">Phone</label>
+                  <input class="form-control form-control-lg" id="phone" name="phone" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="email">Email</label>
+                  <input class="form-control form-control-lg" id="email" name="email" type="email" required />
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="password">Create account password</label>
+                  <input class="form-control form-control-lg" id="password" name="password" type="password" placeholder="Optional" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="address">Delivery address or reference</label>
+                  <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="notes">Order notes</label>
+                  <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                </div>
+              </div>
+
+              <div class="map-block mt-4">
+                <div class="map-toolbar">
+                  <div>
+                    <p class="eyebrow">Map location</p>
+                    <h3>Select your delivery point</h3>
+                  </div>
+                  <button class="btn btn-outline-dark" id="gpsButton" type="button">
+                    <i class="bi bi-crosshair"></i>
+                    Use GPS
+                  </button>
+                </div>
+                <div id="map"></div>
+                <p class="map-status" id="mapStatus">Use GPS or tap the map to mark your delivery point.</p>
+              </div>
+
+              <input type="hidden" id="latitude" name="latitude" />
+              <input type="hidden" id="longitude" name="longitude" />
+              <button class="btn btn-primary btn-lg w-100 mt-4" type="submit">
+                <i class="bi bi-bag-check"></i>
+                Place order
+              </button>
+              <div id="formMessage" class="form-message mt-3" role="status"></div>
+            </form>
+          </div>
+        </section>
+
+        <aside class="order-summary">
+          <div class="checkout-card summary-card">
+            <div class="checkout-card-head">
+              <div>
+                <p class="eyebrow">Order summary</p>
+                <h2>Your cart</h2>
+              </div>
+              <a href="/" class="edit-cart-link">Edit</a>
+            </div>
+            <div id="summaryItems" class="summary-items"></div>
+            <div class="summary-lines">
+              <div><span>Subtotal</span><strong id="subtotalValue">$0</strong></div>
+              <div><span>Delivery</span><strong>To confirm</strong></div>
+              <div class="summary-total"><span>Total</span><strong id="totalValue">$0</strong></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script src="/checkout.js"></script>
+  </body>
+</html>

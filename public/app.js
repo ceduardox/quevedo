@@ -1,61 +1,34 @@
 const cart = new Map();
 let products = [];
-let marker;
-let map;
 
 const productsEl = document.querySelector("#productsGrid");
 const totalEl = document.querySelector("#cartTotal");
 const drawerTotalEl = document.querySelector("#drawerTotal");
 const cartCountEl = document.querySelector("#cartCount");
 const cartItemsEl = document.querySelector("#cartItems");
-const checkoutSection = document.querySelector("#checkoutSection");
 const checkoutButton = document.querySelector("#checkoutButton");
-const form = document.querySelector("#orderForm");
-const messageEl = document.querySelector("#formMessage");
-const gpsButton = document.querySelector("#gpsButton");
-const mapStatus = document.querySelector("#mapStatus");
-const latitudeInput = document.querySelector("#latitude");
-const longitudeInput = document.querySelector("#longitude");
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const CART_KEY = "eq_home_cart_v1";
 
-function initMap() {
-  if (map) return;
-  map = L.map("map").setView([-16.5, -68.15], 12);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap",
-  }).addTo(map);
-  map.on("click", (event) => setLocation(event.latlng.lat, event.latlng.lng));
-}
-
-function setLocation(lat, lng) {
-  latitudeInput.value = lat.toFixed(8);
-  longitudeInput.value = lng.toFixed(8);
-  if (!marker) marker = L.marker([lat, lng]).addTo(map);
-  else marker.setLatLng([lat, lng]);
-  map.setView([lat, lng], 15);
-  mapStatus.textContent = `Delivery point marked: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-}
-
-gpsButton.addEventListener("click", () => {
-  initMap();
-  if (!navigator.geolocation) {
-    mapStatus.textContent = "This browser does not allow GPS. Tap the map manually.";
-    return;
+function loadCart() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CART_KEY) || "{}");
+    Object.entries(saved).forEach(([productId, quantity]) => {
+      if (Number(quantity) > 0) cart.set(productId, Number(quantity));
+    });
+  } catch {
+    localStorage.removeItem(CART_KEY);
   }
-  mapStatus.textContent = "Finding your location...";
-  navigator.geolocation.getCurrentPosition(
-    (position) => setLocation(position.coords.latitude, position.coords.longitude),
-    () => {
-      mapStatus.textContent = "GPS was not available. Tap the map manually.";
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-});
+}
+
+function saveCart() {
+  localStorage.setItem(CART_KEY, JSON.stringify(Object.fromEntries(cart.entries())));
+}
 
 async function loadProducts() {
   const response = await fetch("/api/products");
   products = await response.json();
+  loadCart();
   productsEl.innerHTML = products.map(renderProduct).join("");
   updateCart();
 }
@@ -131,11 +104,7 @@ cartItemsEl.addEventListener("click", (event) => {
 
 checkoutButton.addEventListener("click", () => {
   if (!cart.size) return;
-  checkoutSection.hidden = false;
-  initMap();
-  bootstrap.Offcanvas.getOrCreateInstance(document.querySelector("#cartDrawer")).hide();
-  setTimeout(() => map.invalidateSize(), 250);
-  checkoutSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.location.href = "/checkout";
 });
 
 function getCartRows() {
@@ -152,10 +121,10 @@ function updateCart() {
   drawerTotalEl.textContent = money.format(total);
   cartCountEl.textContent = count;
   checkoutButton.disabled = rows.length === 0;
+  saveCart();
 
   if (!rows.length) {
     cartItemsEl.innerHTML = `<div class="empty-cart">Your cart is empty. Add products to continue.</div>`;
-    checkoutSection.hidden = true;
     return;
   }
 
@@ -184,34 +153,5 @@ function updateCart() {
     )
     .join("");
 }
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  messageEl.className = "form-message mt-3";
-  messageEl.textContent = "Sending order...";
-
-  const items = Array.from(cart.entries()).map(([productId, quantity]) => ({ productId, quantity }));
-  const formData = new FormData(form);
-  const payload = Object.fromEntries(formData.entries());
-  payload.items = items;
-
-  try {
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.message || "Order could not be sent.");
-    messageEl.classList.add("success");
-    messageEl.textContent = `Order #${result.orderId} received. Total: ${money.format(result.total)}.`;
-    cart.clear();
-    updateCart();
-    form.reset();
-  } catch (error) {
-    messageEl.classList.add("error");
-    messageEl.textContent = error.message;
-  }
-});
 
 loadProducts();
