@@ -45,7 +45,7 @@ function renderProduct(product) {
           <span>${product.category}</span>
           <strong>${money.format(product.price)}</strong>
         </div>
-        <h3>${product.name}</h3>
+        <h3><a href="/product/${product.id}">${product.name}</a></h3>
         <p>${product.description}</p>
         <div class="product-actions">
           <button class="btn btn-outline-dark icon-btn" type="button" data-minus="${product.id}" aria-label="Decrease quantity">
@@ -60,6 +60,7 @@ function renderProduct(product) {
             Add
           </button>
         </div>
+        <a class="product-detail-link" href="/product/${product.id}">View details</a>
       </div>
     </article>
   `;

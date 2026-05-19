@@ -42,6 +42,24 @@ const images = [
     width: 900,
     quality: 80,
   },
+  {
+    input: path.join("source-images", "tramontina-island-hood.jpg"),
+    output: "tramontina-island-hood.webp",
+    width: 1000,
+    quality: 84,
+  },
+  {
+    input: path.join("source-images", "tramontina-wall-hood.jpg"),
+    output: "tramontina-wall-hood.webp",
+    width: 1000,
+    quality: 84,
+  },
+  {
+    input: path.join("source-images", "tramontina-penta-cooktop.jpg"),
+    output: "tramontina-penta-cooktop.webp",
+    width: 1000,
+    quality: 84,
+  },
 ];
 
 async function main() {

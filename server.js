@@ -21,6 +21,9 @@ const products = [
     badge: "Pro",
     image: "/assets/professional-kitchen-faucet.webp",
     description: "Polished professional faucet for premium kitchen projects.",
+    detail:
+      "A clean, professional-style kitchen faucet designed for modern countertops, premium sinks and daily use. Its polished finish makes it easy to pair with stainless steel appliances and contemporary kitchen designs.",
+    specs: ["Premium polished finish", "Modern kitchen profile", "Pairs well with stainless sinks", "Recommended for residential projects"],
   },
   {
     id: "satin-finish-kitchen-sink",
@@ -30,6 +33,9 @@ const products = [
     badge: "Pro",
     image: "/assets/satin-finish-kitchen-sink.webp",
     description: "Premium satin sink with a durable, refined finish.",
+    detail:
+      "A refined satin-finish sink built for a modern kitchen installation. The deep metallic look gives the counter a professional finish while keeping the design simple and easy to combine with different faucet styles.",
+    specs: ["Satin stainless look", "Clean rectangular design", "Durable work area", "Ideal for premium kitchen remodels"],
   },
   {
     id: "stainless-steel-kitchen-mixer",
@@ -39,6 +45,9 @@ const products = [
     badge: "Best Seller",
     image: "/assets/stainless-steel-kitchen-mixer.webp",
     description: "High-flow stainless mixer built for daily use.",
+    detail:
+      "A stainless steel kitchen mixer with a practical silhouette for everyday preparation, washing and cleaning. It is a strong add-on for kitchen sets that need a functional but elevated finish.",
+    specs: ["Stainless steel style", "Daily-use kitchen mixer", "High-flow profile", "Easy to combine with chrome accessories"],
   },
   {
     id: "chrome-soap-dispenser",
@@ -48,6 +57,49 @@ const products = [
     badge: "Add-on",
     image: "/assets/chrome-soap-dispenser.webp",
     description: "Chrome dispenser to complete a kitchen or bath set.",
+    detail:
+      "A chrome soap dispenser made to complete a coordinated kitchen or bathroom installation. It keeps the counter cleaner and gives the final project a more integrated look.",
+    specs: ["Chrome finish", "Countertop accessory", "Useful for soap or detergent", "Complements faucets and sinks"],
+  },
+  {
+    id: "tramontina-new-dritta-isla-90",
+    name: "Tramontina New Dritta Isla 90 Island Hood",
+    category: "Tramontina Appliances",
+    price: 1290,
+    badge: "Tramontina",
+    image: "/assets/tramontina-island-hood.webp",
+    description: "90 cm stainless steel island range hood for open kitchen layouts.",
+    detail:
+      "The Tramontina New Dritta Isla 90 is a stainless steel island hood designed for kitchens where the cooktop sits away from the wall. It gives the room a professional focal point while helping extract smoke, steam and cooking odors above the island area.",
+    specs: ["90 cm island installation", "Stainless steel finish", "Extractor / purifier function", "Recommended for cooktops up to 90 cm", "LED lighting", "Multiple speed control"],
+    sourceUrl: "https://global.tramontina.com/en/p/tramontina-90-cm-stainless-steel-island-range-hood-220-v-95800018",
+  },
+  {
+    id: "tramontina-new-dritta-wall-90",
+    name: "Tramontina New Dritta Wall 90 Range Hood",
+    category: "Tramontina Appliances",
+    price: 950,
+    badge: "Tramontina",
+    image: "/assets/tramontina-wall-hood.webp",
+    description: "90 cm stainless steel wall-mounted hood with a clean modern profile.",
+    detail:
+      "The Tramontina New Dritta Wall 90 brings a straight stainless steel design for wall-mounted kitchen installations. It is a strong option for remodels that need ventilation, washable filters and a premium visual finish above a stove or cooktop.",
+    specs: ["90 cm wall installation", "Stainless steel finish", "Extractor / purifier function", "LED lighting", "Washable metallic filters", "Modern straight-line design"],
+    sourceUrl: "https://global.tramontina.com/en/p/tramontina-90-cm-220-v-stainless-steel-wall-mounted-range-hood-95800004",
+  },
+  {
+    id: "tramontina-penta-glass-flat-5gg-90",
+    name: "Tramontina Penta Glass Flat 5GG 90 Cooktop",
+    category: "Tramontina Appliances",
+    price: 680,
+    badge: "Tramontina",
+    image: "/assets/tramontina-penta-cooktop.webp",
+    description: "Black tempered glass gas cooktop with 5 burners and cast iron trivets.",
+    detail:
+      "The Tramontina Penta Glass Flat 5GG 90 is a 5-burner gas cooktop with black tempered glass and a wide cooking surface. It is designed for premium kitchens that need more burner capacity, a clean visual finish and sturdy support for everyday cookware.",
+    specs: ["90 cm gas cooktop", "5 burners", "Black tempered glass", "Cast iron trivets", "Auto spark ignition", "Safestop safety system"],
+    sourceUrl:
+      "https://global.tramontina.com/en/p/tramontina-design-collection-penta-glass-flat-5gg-90-safestop-black-tempered-glass-gas-cooktop-with-cast-iron-trivets-auto-spark-and-5-burners-94731104",
   },
 ];
 
@@ -340,6 +392,12 @@ app.get("/api/products", (req, res) => {
   res.json(products);
 });
 
+app.get("/api/products/:id", (req, res) => {
+  const product = getProduct(req.params.id);
+  if (!product) return res.status(404).json({ ok: false, message: "Product not found." });
+  res.json(product);
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, database: dbReady ? "postgres" : "memory-demo" });
 });
@@ -350,6 +408,10 @@ app.get("/admin", (req, res) => {
 
 app.get("/checkout", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "checkout.html"));
+});
+
+app.get("/product/:id", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "product.html"));
 });
 
 app.get("/admin/dashboard", (req, res) => {
