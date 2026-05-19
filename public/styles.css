@@ -517,6 +517,37 @@ body {
   padding-left: 18px;
 }
 
+.delivery-box {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfaf7;
+}
+
+.delivery-status {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(180, 35, 24, 0.1);
+  color: var(--red);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.delivery-status.is-delivered {
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--green-dark);
+}
+
+.delivery-box small {
+  color: var(--muted);
+}
+
 .login-body {
   min-height: 100vh;
   background:

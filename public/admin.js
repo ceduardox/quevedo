@@ -10,6 +10,15 @@ function mapLink(order) {
   return `<a href="${url}" target="_blank" rel="noreferrer">Open in Google Maps</a>`;
 }
 
+function formatDateTime(value) {
+  return value ? new Date(value).toLocaleString() : "Not set";
+}
+
+function dateInputValue(value) {
+  const date = value ? new Date(value) : new Date();
+  return date.toISOString().slice(0, 10);
+}
+
 function renderOrders(orders) {
   orderCountEl.textContent = orders.length;
   if (!orders.length) {
@@ -35,11 +44,29 @@ function renderOrders(orders) {
               <strong>${order.customer?.full_name || ""}</strong><br>
               <span>${order.customer?.phone || ""}</span><br>
               <span>${order.customer?.email || ""}</span>
+              <div class="order-label mt-3">Payment</div>
+              <strong>${order.payer_name || order.customer?.full_name || "Not provided"}</strong><br>
+              <span>${order.payment_reference || "No payment reference"}</span><br>
+              <span>Transaction ID: ${order.transaction_id || "Not provided"}</span><br>
+              <span>Payment date: ${formatDateTime(order.payment_date || order.created_at)}</span><br>
+              <span>Payment status: ${order.payment_status || "Pending"}</span>
             </div>
             <div>
               <div class="order-label">Delivery</div>
               <p class="mb-1">${order.address || "No written address"}</p>
               <p class="mb-0">${mapLink(order)}</p>
+              <div class="delivery-box">
+                <span class="delivery-status ${order.delivered_at ? "is-delivered" : ""}">
+                  ${order.delivered_at ? "Delivered" : "Not delivered"}
+                </span>
+                <label class="form-label mt-2" for="delivery-${order.id}">Delivery date</label>
+                <input class="form-control form-control-sm" id="delivery-${order.id}" type="date" value="${dateInputValue(order.delivered_at)}">
+                <button class="btn btn-primary btn-sm w-100 mt-2" type="button" data-deliver="${order.id}">
+                  <i class="bi bi-check2-circle"></i>
+                  Mark as delivered
+                </button>
+                ${order.delivered_at ? `<small>Delivered at: ${formatDateTime(order.delivered_at)}</small>` : ""}
+              </div>
             </div>
             <div>
               <div class="order-label">Products</div>
@@ -75,6 +102,29 @@ async function loadOrders() {
     ordersEl.innerHTML = `<div class="order-card text-danger">${error.message}</div>`;
   }
 }
+
+ordersEl.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-deliver]");
+  if (!button) return;
+  const orderId = button.dataset.deliver;
+  const deliveredAt = document.querySelector(`#delivery-${orderId}`).value;
+  button.disabled = true;
+  button.textContent = "Saving...";
+  try {
+    const response = await fetch(`/api/admin/orders/${orderId}/delivery`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ delivered: true, deliveredAt }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "Delivery could not be updated.");
+    await loadOrders();
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = "Mark as delivered";
+    alert(error.message);
+  }
+});
 
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/admin/logout", { method: "POST" });

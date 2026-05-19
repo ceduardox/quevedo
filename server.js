@@ -103,6 +103,18 @@ const products = [
   },
 ];
 
+function getSeedPaymentOrder() {
+  if (!process.env.SEED_PAYMENT_TRANSACTION_ID) return null;
+  return {
+    transactionId: process.env.SEED_PAYMENT_TRANSACTION_ID,
+    payerName: process.env.SEED_PAYMENT_PAYER_NAME || "Payment customer",
+    paymentDate: process.env.SEED_PAYMENT_DATE || new Date().toISOString(),
+    total: Number(process.env.SEED_PAYMENT_TOTAL || 0),
+    paymentReference: process.env.SEED_PAYMENT_REFERENCE || "Imported payment",
+    itemName: process.env.SEED_PAYMENT_ITEM_NAME || "Imported paid order",
+  };
+}
+
 let pool;
 let dbReady = false;
 const memory = { customers: [], orders: [], items: [], nextCustomerId: 1, nextOrderId: 1 };
@@ -198,6 +210,12 @@ async function initDb() {
       latitude NUMERIC(11,8),
       longitude NUMERIC(11,8),
       notes TEXT,
+      payment_status TEXT NOT NULL DEFAULT 'Pending',
+      payment_date TIMESTAMPTZ,
+      payment_reference TEXT,
+      payer_name TEXT,
+      transaction_id TEXT,
+      delivered_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
@@ -211,7 +229,65 @@ async function initDb() {
       line_total NUMERIC(10,2) NOT NULL
     );
   `);
+  await pool.query(`
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'Pending';
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_date TIMESTAMPTZ;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payer_name TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS transaction_id TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
+  `);
+  await seedPaymentOrder();
   dbReady = true;
+}
+
+async function seedPaymentOrder() {
+  const seededPaymentOrder = getSeedPaymentOrder();
+  if (!seededPaymentOrder || !seededPaymentOrder.total) return;
+  const exists = await pool.query("SELECT id FROM orders WHERE transaction_id = $1 LIMIT 1", [seededPaymentOrder.transactionId]);
+  if (exists.rowCount) return;
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const customerResult = await client.query(
+      `INSERT INTO customers (full_name, phone, email)
+       VALUES ($1, $2, $3)
+      ON CONFLICT (email) DO UPDATE SET full_name = EXCLUDED.full_name, phone = EXCLUDED.phone
+       RETURNING id`,
+      [seededPaymentOrder.payerName, "Not provided", `payment-${seededPaymentOrder.transactionId}@importadora.local`]
+    );
+    const customerId = customerResult.rows[0].id;
+    const orderResult = await client.query(
+      `INSERT INTO orders (
+        customer_id, status, total, address, notes, payment_status, payment_date,
+        payment_reference, payer_name, transaction_id, created_at
+       )
+       VALUES ($1, 'Paid', $2, $3, $4, 'Pending', $5, $6, $7, $8, $5)
+       RETURNING id`,
+      [
+        customerId,
+        seededPaymentOrder.total,
+        "Bolivia - department not specified",
+        "Imported from payment screenshot. Delivery details pending confirmation.",
+        seededPaymentOrder.paymentDate,
+        seededPaymentOrder.paymentReference,
+        seededPaymentOrder.payerName,
+        seededPaymentOrder.transactionId,
+      ]
+    );
+    await client.query(
+      `INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity, line_total)
+       VALUES ($1, $2, $3, $4, 1, $4)`,
+      [orderResult.rows[0].id, "payment-transfer-1500", seededPaymentOrder.itemName, seededPaymentOrder.total]
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function createOrder(payload) {
@@ -317,6 +393,12 @@ function createMemoryOrder(orderData) {
     latitude: orderData.latitude,
     longitude: orderData.longitude,
     notes: orderData.notes,
+    payment_status: "Pending",
+    payment_date: null,
+    payment_reference: null,
+    payer_name: null,
+    transaction_id: null,
+    delivered_at: null,
     created_at: new Date().toISOString(),
   };
   memory.orders.push(order);
@@ -378,6 +460,12 @@ async function listOrders() {
     latitude: row.latitude,
     longitude: row.longitude,
     notes: row.notes,
+    payment_status: row.payment_status,
+    payment_date: row.payment_date,
+    payment_reference: row.payment_reference,
+    payer_name: row.payer_name,
+    transaction_id: row.transaction_id,
+    delivered_at: row.delivered_at,
     created_at: row.created_at,
     customer: {
       full_name: row.full_name,
@@ -386,6 +474,67 @@ async function listOrders() {
     },
     items: row.items,
   }));
+}
+
+function seedMemoryPaymentOrder() {
+  const seededPaymentOrder = getSeedPaymentOrder();
+  if (!seededPaymentOrder || !seededPaymentOrder.total) return;
+  if (memory.orders.some((order) => order.transaction_id === seededPaymentOrder.transactionId)) return;
+  const customer = {
+    id: memory.nextCustomerId++,
+    full_name: seededPaymentOrder.payerName,
+    phone: "Not provided",
+    email: `payment-${seededPaymentOrder.transactionId}@importadora.local`,
+    created_at: seededPaymentOrder.paymentDate,
+  };
+  const order = {
+    id: memory.nextOrderId++,
+    customer_id: customer.id,
+    status: "Paid",
+    total: seededPaymentOrder.total,
+    address: "Bolivia - department not specified",
+    latitude: null,
+    longitude: null,
+    notes: "Imported from payment screenshot. Delivery details pending confirmation.",
+    payment_status: "Pending",
+    payment_date: seededPaymentOrder.paymentDate,
+    payment_reference: seededPaymentOrder.paymentReference,
+    payer_name: seededPaymentOrder.payerName,
+    transaction_id: seededPaymentOrder.transactionId,
+    delivered_at: null,
+    created_at: seededPaymentOrder.paymentDate,
+  };
+  memory.customers.push(customer);
+  memory.orders.push(order);
+  memory.items.push({
+    order_id: order.id,
+    product_id: "payment-transfer-1500",
+    product_name: seededPaymentOrder.itemName,
+    unit_price: seededPaymentOrder.total,
+    quantity: 1,
+    line_total: seededPaymentOrder.total,
+  });
+}
+
+async function updateDelivery(orderId, delivered, deliveredAt) {
+  const deliveryDate = delivered ? deliveredAt || new Date().toISOString() : null;
+  if (!dbReady) {
+    const order = memory.orders.find((item) => item.id === Number(orderId));
+    if (!order) return null;
+    order.status = delivered ? "Delivered" : "Paid";
+    order.delivered_at = deliveryDate;
+    return order;
+  }
+
+  const result = await pool.query(
+    `UPDATE orders
+     SET status = $2,
+         delivered_at = $3
+     WHERE id = $1
+     RETURNING id, status, delivered_at`,
+    [orderId, delivered ? "Delivered" : "Paid", deliveryDate]
+  );
+  return result.rows[0] || null;
 }
 
 app.get("/api/products", (req, res) => {
@@ -451,12 +600,20 @@ app.get("/api/admin/orders", requireAdmin, async (req, res) => {
   res.json({ ok: true, database: dbReady ? "postgres" : "memory-demo", orders });
 });
 
+app.patch("/api/admin/orders/:id/delivery", requireAdmin, async (req, res) => {
+  const delivered = Boolean(req.body.delivered);
+  const updated = await updateDelivery(req.params.id, delivered, req.body.deliveredAt);
+  if (!updated) return res.status(404).json({ ok: false, message: "Order not found." });
+  res.json({ ok: true, order: updated });
+});
+
 initDb()
   .catch((error) => {
     console.warn("PostgreSQL is not available. The app will start in memory demo mode.");
     console.warn(error.message);
   })
   .finally(() => {
+    if (!dbReady) seedMemoryPaymentOrder();
     app.listen(PORT, () => {
       console.log(`Store ready at http://localhost:${PORT}`);
       console.log(`Admin login at http://localhost:${PORT}/admin`);
