@@ -1,0 +1,18 @@
+{
+  "name": "eduardo-online-store",
+  "version": "1.0.0",
+  "description": "Tienda online con panel admin, Node.js y PostgreSQL.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "leaflet": "^1.9.4",
+    "pg": "^8.16.3"
+  }
+}

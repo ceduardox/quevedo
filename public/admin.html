@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin | EQ Home Store</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="admin-body">
+    <nav class="navbar navbar-expand-lg sticky-top">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+          <img src="/media/logo_1757914521356--Bodoo3y.png" alt="Logo" />
+          <span>Panel Admin</span>
+        </a>
+        <a class="btn btn-outline-dark btn-sm" href="/">
+          <i class="bi bi-shop"></i>
+          Tienda
+        </a>
+      </div>
+    </nav>
+
+    <main class="container py-5">
+      <div class="admin-header">
+        <div>
+          <p class="eyebrow">Pedidos</p>
+          <h1>Ordenes recibidas</h1>
+        </div>
+        <div class="admin-stat">
+          <span id="dbMode">Cargando</span>
+          <strong id="orderCount">0</strong>
+          <small>pedidos</small>
+        </div>
+      </div>
+      <section id="orders" class="orders-list mt-4"></section>
+    </main>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>

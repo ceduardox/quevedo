@@ -1,0 +1,76 @@
+const ordersEl = document.querySelector("#orders");
+const orderCountEl = document.querySelector("#orderCount");
+const dbModeEl = document.querySelector("#dbMode");
+const params = new URLSearchParams(window.location.search);
+const key = params.get("key") || "";
+const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+function mapLink(order) {
+  if (!order.latitude || !order.longitude) return "Sin ubicacion GPS";
+  const url = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`;
+  return `<a href="${url}" target="_blank" rel="noreferrer">Ver en Google Maps</a>`;
+}
+
+function renderOrders(orders) {
+  orderCountEl.textContent = orders.length;
+  if (!orders.length) {
+    ordersEl.innerHTML = `<div class="order-card">Todavia no hay pedidos.</div>`;
+    return;
+  }
+
+  ordersEl.innerHTML = orders
+    .map(
+      (order) => `
+        <article class="order-card">
+          <div class="order-top">
+            <div>
+              <span class="badge-soft">${order.status}</span>
+              <h2>Pedido #${order.id}</h2>
+              <small>${new Date(order.created_at).toLocaleString()}</small>
+            </div>
+            <div class="order-total">${money.format(order.total)}</div>
+          </div>
+          <div class="order-grid">
+            <div>
+              <div class="order-label">Cliente</div>
+              <strong>${order.customer?.full_name || ""}</strong><br>
+              <span>${order.customer?.phone || ""}</span><br>
+              <span>${order.customer?.email || ""}</span>
+            </div>
+            <div>
+              <div class="order-label">Ubicacion</div>
+              <p class="mb-1">${order.address || "Sin direccion escrita"}</p>
+              <p class="mb-0">${mapLink(order)}</p>
+            </div>
+            <div>
+              <div class="order-label">Productos</div>
+              <ul class="order-items">
+                ${order.items
+                  .map(
+                    (item) =>
+                      `<li>${item.quantity} x ${item.product_name || item.product?.name} - ${money.format(item.line_total || item.product?.price * item.quantity)}</li>`
+                  )
+                  .join("")}
+              </ul>
+              ${order.notes ? `<p class="mt-2 mb-0"><strong>Notas:</strong> ${order.notes}</p>` : ""}
+            </div>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+async function loadOrders() {
+  try {
+    const response = await fetch(`/api/admin/orders?key=${encodeURIComponent(key)}`);
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || "No se pudieron cargar los pedidos.");
+    dbModeEl.textContent = result.database === "postgres" ? "PostgreSQL" : "Demo memoria";
+    renderOrders(result.orders);
+  } catch (error) {
+    ordersEl.innerHTML = `<div class="order-card text-danger">${error.message}</div>`;
+  }
+}
+
+loadOrders();
