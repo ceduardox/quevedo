@@ -110,14 +110,13 @@ form.addEventListener("submit", async (event) => {
   messageEl.textContent = "Sending order...";
 
   const items = Array.from(cart.entries()).map(([productId, quantity]) => ({ productId, quantity }));
-  const payload = Object.fromEntries(new FormData(form).entries());
-  payload.items = items;
+  const payload = new FormData(form);
+  payload.set("items", JSON.stringify(items));
 
   try {
     const response = await fetch("/api/orders", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: payload,
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Order could not be sent.");

@@ -76,6 +76,8 @@ function renderOrders(orders) {
               <span>Transaction ID: ${order.transaction_id || "Not provided"}</span><br>
               <span>Payment date: ${formatDateTime(order.payment_date || order.created_at)}</span><br>
               <span>Payment status: ${order.payment_status || "Pending"}</span>
+              <br><span>Method: ${order.payment_method || "Bank transfer"}</span>
+              ${order.receipt_path ? `<br><a href="${order.receipt_path}" target="_blank" rel="noreferrer">View receipt</a>` : "<br><span>No receipt uploaded</span>"}
             </div>
             <div>
               <div class="order-label">Delivery</div>

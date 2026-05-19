@@ -699,6 +699,50 @@ body {
   font-size: 1.2rem;
 }
 
+.bank-transfer-box {
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background: rgba(15, 118, 110, 0.06);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.bank-transfer-box h3 {
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.bank-transfer-box dl {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+
+.bank-transfer-box dl div {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 10px;
+  border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+  padding-bottom: 8px;
+}
+
+.bank-transfer-box dt {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.bank-transfer-box dd {
+  margin: 0;
+  font-weight: 900;
+}
+
+.account-card {
+  max-width: 520px;
+}
+
+.account-card h2 {
+  font-weight: 900;
+}
+
 .order-summary {
   position: sticky;
   top: 92px;
@@ -959,6 +1003,10 @@ body {
   }
 
   .detail-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .bank-transfer-box dl div {
     grid-template-columns: 1fr;
   }
 }

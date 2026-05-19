@@ -31,6 +31,10 @@
             <i class="bi bi-arrow-left"></i>
             Continue shopping
           </a>
+          <a class="btn btn-outline-dark btn-sm" href="/account">
+            <i class="bi bi-person"></i>
+            My account
+          </a>
         </div>
       </div>
     </nav>
@@ -86,7 +90,7 @@
                 </div>
                 <div class="col-12">
                   <label class="form-label" for="password">Create account password</label>
-                  <input class="form-control form-control-lg" id="password" name="password" type="password" placeholder="Create a password, optional" />
+                  <input class="form-control form-control-lg" id="password" name="password" type="password" placeholder="Create a password to track your orders" />
                 </div>
                 <div class="col-12">
                   <label class="form-label" for="address">Delivery address or reference</label>
@@ -96,6 +100,25 @@
                   <label class="form-label" for="notes">Order notes</label>
                   <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Delivery instructions, preferred time, or product notes"></textarea>
                 </div>
+              </div>
+
+              <div class="bank-transfer-box mt-4">
+                <div>
+                  <p class="eyebrow">Bank transfer</p>
+                  <h3>Company bank account</h3>
+                </div>
+                <dl>
+                  <div><dt>Bank name</dt><dd>Citibank</dd></div>
+                  <div><dt>Bank address</dt><dd>111 Wall Street New York, NY 10043 USA</dd></div>
+                  <div><dt>ABA routing number</dt><dd>031100209</dd></div>
+                  <div><dt>SWIFT code</dt><dd>CITIUS33</dd></div>
+                  <div><dt>Account number</dt><dd>70588040002228010</dd></div>
+                  <div><dt>Account type</dt><dd>CHECKING</dd></div>
+                  <div><dt>Beneficiary</dt><dd>IMPORTADORA QUEVEDO LLC</dd></div>
+                </dl>
+                <input type="hidden" name="paymentMethod" value="Bank transfer" />
+                <label class="form-label" for="receipt">Upload payment receipt</label>
+                <input class="form-control" id="receipt" name="receipt" type="file" accept="image/*,.pdf" />
               </div>
 
               <div class="map-block mt-4">

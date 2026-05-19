@@ -3,6 +3,7 @@ require("dotenv").config();
 const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
+const multer = require("multer");
 const { Pool } = require("pg");
 
 const app = express();
@@ -118,6 +119,10 @@ function getSeedPaymentOrder() {
 let pool;
 let dbReady = false;
 const memory = { customers: [], orders: [], items: [], nextCustomerId: 1, nextOrderId: 1 };
+const upload = multer({
+  dest: path.join(__dirname, "public", "uploads"),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -149,8 +154,22 @@ function hashPassword(password) {
   return `pbkdf2_sha256$120000$${salt}$${hash}`;
 }
 
+function verifyPassword(password, stored) {
+  if (!password || !stored) return false;
+  const [method, rounds, salt, originalHash] = String(stored).split("$");
+  if (method !== "pbkdf2_sha256" || !rounds || !salt || !originalHash) return false;
+  const hash = crypto.pbkdf2Sync(password, salt, Number(rounds), 32, "sha256").toString("hex");
+  return originalHash.length === hash.length && crypto.timingSafeEqual(Buffer.from(originalHash), Buffer.from(hash));
+}
+
 function createAdminToken() {
   const payload = Buffer.from(JSON.stringify({ user: ADMIN_USER, exp: Date.now() + 1000 * 60 * 60 * 12 })).toString("base64url");
+  const signature = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function createCustomerToken(customer) {
+  const payload = Buffer.from(JSON.stringify({ id: customer.id, email: customer.email, exp: Date.now() + 1000 * 60 * 60 * 24 * 30 })).toString("base64url");
   const signature = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
   return `${payload}.${signature}`;
 }
@@ -189,6 +208,27 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function verifyCustomerToken(token) {
+  try {
+    if (!token || !token.includes(".")) return false;
+    const [payload, signature] = token.split(".");
+    const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("base64url");
+    if (signature.length !== expected.length) return false;
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return data.exp > Date.now() ? data : false;
+  } catch {
+    return false;
+  }
+}
+
+function requireCustomer(req, res, next) {
+  const session = verifyCustomerToken(parseCookies(req).customer_session);
+  if (!session) return res.status(401).json({ ok: false, message: "Customer login required." });
+  req.customerSession = session;
+  next();
+}
+
 async function initDb() {
   pool = new Pool({ connectionString: DATABASE_URL });
   await pool.query(`
@@ -213,6 +253,8 @@ async function initDb() {
       payment_status TEXT NOT NULL DEFAULT 'Pending',
       payment_date TIMESTAMPTZ,
       payment_reference TEXT,
+      payment_method TEXT,
+      receipt_path TEXT,
       payer_name TEXT,
       transaction_id TEXT,
       delivered_at TIMESTAMPTZ,
@@ -236,6 +278,8 @@ async function initDb() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'Pending';
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_date TIMESTAMPTZ;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS receipt_path TEXT;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payer_name TEXT;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS transaction_id TEXT;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
@@ -267,10 +311,10 @@ async function seedPaymentOrder() {
     const orderResult = await client.query(
       `INSERT INTO orders (
         customer_id, status, total, address, notes, payment_status, payment_date,
-        payment_reference, payer_name, transaction_id, delivered_at,
+        payment_reference, payment_method, payer_name, transaction_id, delivered_at,
         delivered_by, delivery_location, delivery_notes, created_at
        )
-       VALUES ($1, 'Paid', $2, $3, $4, 'Pending', $5, $6, $7, $8, NULL, NULL, NULL, NULL, $5)
+       VALUES ($1, 'Paid', $2, $3, $4, 'Pending', $5, $6, 'Bank transfer', $7, $8, NULL, NULL, NULL, NULL, $5)
        RETURNING id`,
       [
         customerId,
@@ -297,7 +341,7 @@ async function seedPaymentOrder() {
   }
 }
 
-async function createOrder(payload) {
+async function createOrder(payload, receiptFile) {
   const selectedItems = normalizeItems(payload.items);
   if (!selectedItems.length) {
     const error = new Error("Select at least one product.");
@@ -324,6 +368,8 @@ async function createOrder(payload) {
     latitude: payload.latitude ? Number(payload.latitude) : null,
     longitude: payload.longitude ? Number(payload.longitude) : null,
     notes: String(payload.notes || "").trim(),
+    paymentMethod: String(payload.paymentMethod || "Bank transfer").trim(),
+    receiptPath: receiptFile ? `/uploads/${receiptFile.filename}` : null,
     total,
     items: selectedItems,
   };
@@ -348,6 +394,11 @@ async function createOrder(payload) {
       [customer.id, orderData.total, orderData.address, orderData.latitude, orderData.longitude, orderData.notes]
     );
     const order = orderResult.rows[0];
+    await client.query("UPDATE orders SET payment_method = $2, receipt_path = $3 WHERE id = $1", [
+      order.id,
+      orderData.paymentMethod,
+      orderData.receiptPath,
+    ]);
 
     for (const item of orderData.items) {
       await client.query(
@@ -403,6 +454,8 @@ function createMemoryOrder(orderData) {
     payment_status: "Pending",
     payment_date: null,
     payment_reference: null,
+    payment_method: orderData.paymentMethod,
+    receipt_path: orderData.receiptPath,
     payer_name: null,
     transaction_id: null,
     delivered_at: null,
@@ -473,6 +526,8 @@ async function listOrders() {
     payment_status: row.payment_status,
     payment_date: row.payment_date,
     payment_reference: row.payment_reference,
+    payment_method: row.payment_method,
+    receipt_path: row.receipt_path,
     payer_name: row.payer_name,
     transaction_id: row.transaction_id,
     delivered_at: row.delivered_at,
@@ -512,6 +567,8 @@ function seedMemoryPaymentOrder() {
     payment_status: "Pending",
     payment_date: seededPaymentOrder.paymentDate,
     payment_reference: seededPaymentOrder.paymentReference,
+    payment_method: "Bank transfer",
+    receipt_path: null,
     payer_name: seededPaymentOrder.payerName,
     transaction_id: seededPaymentOrder.transactionId,
     delivered_at: null,
@@ -588,6 +645,10 @@ app.get("/checkout", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "checkout.html"));
 });
 
+app.get("/account", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "account.html"));
+});
+
 app.get("/product/:id", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "product.html"));
 });
@@ -615,9 +676,34 @@ app.get("/api/admin/me", requireAdmin, (req, res) => {
   res.json({ ok: true, user: ADMIN_USER });
 });
 
-app.post("/api/orders", async (req, res) => {
+app.post("/api/account/login", async (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const password = String(req.body.password || "");
+  const customer = dbReady
+    ? (await pool.query("SELECT id, full_name, phone, email, password_hash FROM customers WHERE email = $1", [email])).rows[0]
+    : memory.customers.find((item) => item.email === email);
+  if (!customer || !verifyPassword(password, customer.password_hash)) {
+    return res.status(401).json({ ok: false, message: "Invalid email or password." });
+  }
+  res.setHeader("Set-Cookie", `customer_session=${encodeURIComponent(createCustomerToken(customer))}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000`);
+  res.json({ ok: true, customer: { fullName: customer.full_name, email: customer.email } });
+});
+
+app.post("/api/account/logout", (req, res) => {
+  res.setHeader("Set-Cookie", "customer_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");
+  res.json({ ok: true });
+});
+
+app.get("/api/account/orders", requireCustomer, async (req, res) => {
+  const orders = await listOrders();
+  const userOrders = orders.filter((order) => order.customer?.email === req.customerSession.email);
+  res.json({ ok: true, orders: userOrders });
+});
+
+app.post("/api/orders", upload.single("receipt"), async (req, res) => {
   try {
-    const order = await createOrder(req.body);
+    const payload = req.file ? { ...req.body, items: JSON.parse(req.body.items || "[]") } : req.body;
+    const order = await createOrder(payload, req.file);
     res.status(201).json({ ok: true, orderId: order.id, total: Number(order.total) });
   } catch (error) {
     res.status(error.status || 500).json({ ok: false, message: error.message || "Order could not be created." });
