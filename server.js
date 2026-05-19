@@ -819,6 +819,8 @@ async function createManualAdminOrder(payload) {
     phone,
     email,
     address: String(payload.address || "Bolivia - address pending").trim(),
+    latitude: payload.latitude ? Number(payload.latitude) : null,
+    longitude: payload.longitude ? Number(payload.longitude) : null,
     notes: String(payload.notes || "Manual order added from admin.").trim(),
     paymentReference: String(payload.paymentReference || "").trim(),
     transactionId: String(payload.transactionId || `MANUAL-${Date.now()}`).trim(),
@@ -845,8 +847,8 @@ async function createManualAdminOrder(payload) {
       status: "Paid",
       total: orderData.total,
       address: orderData.address,
-      latitude: null,
-      longitude: null,
+      latitude: orderData.latitude,
+      longitude: orderData.longitude,
       notes: orderData.notes,
       payment_status: "Paid",
       payment_date: orderData.paymentDate,
@@ -885,15 +887,17 @@ async function createManualAdminOrder(payload) {
     );
     const orderResult = await client.query(
       `INSERT INTO orders (
-        customer_id, status, total, address, notes, payment_status, payment_date,
+        customer_id, status, total, address, latitude, longitude, notes, payment_status, payment_date,
         payment_reference, payment_method, payer_name, transaction_id, created_at
        )
-       VALUES ($1, 'Paid', $2, $3, $4, 'Paid', $5, $6, 'Bank transfer', $7, $8, $5)
+       VALUES ($1, 'Paid', $2, $3, $4, $5, $6, 'Paid', $7, $8, 'Bank transfer', $9, $10, $7)
        RETURNING id`,
       [
         customerResult.rows[0].id,
         orderData.total,
         orderData.address,
+        orderData.latitude,
+        orderData.longitude,
         orderData.notes,
         orderData.paymentDate,
         orderData.paymentReference,

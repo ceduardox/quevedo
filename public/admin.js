@@ -6,10 +6,22 @@ const manualOrderForm = document.querySelector("#manualOrderForm");
 const manualOrderMessage = document.querySelector("#manualOrderMessage");
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
-function mapLink(order) {
-  if (!order.latitude || !order.longitude) return "No GPS location";
-  const url = `https://www.google.com/maps?q=${order.latitude},${order.longitude}`;
-  return `<a href="${url}" target="_blank" rel="noreferrer">Open in Google Maps</a>`;
+function mapPanel(order) {
+  const latitude = Number(order.latitude);
+  const longitude = Number(order.longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return `<p class="mb-0 text-muted">No GPS location saved for this order.</p>`;
+  }
+  const coords = `${latitude},${longitude}`;
+  const mapsUrl = `https://www.google.com/maps?q=${encodeURIComponent(coords)}`;
+  const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(coords)}&z=15&output=embed`;
+  return `
+    <div class="admin-map">
+      <iframe src="${embedUrl}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Order map"></iframe>
+      <small>Coordinates: ${coords}</small>
+      <a href="${mapsUrl}" target="_blank" rel="noreferrer">Open coordinates in Google Maps</a>
+    </div>
+  `;
 }
 
 function formatDateTime(value) {
@@ -84,7 +96,7 @@ function renderOrders(orders) {
             <div>
               <div class="order-label">Delivery</div>
               <p class="mb-1">${order.address || "No written address"}</p>
-              <p class="mb-0">${mapLink(order)}</p>
+              ${mapPanel(order)}
               <div class="delivery-box">
                 <span class="delivery-status ${delivery.delivered ? "is-delivered" : ""}">
                   ${delivery.delivered ? "Delivered" : "Not delivered"}
