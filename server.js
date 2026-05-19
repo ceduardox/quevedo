@@ -112,6 +112,10 @@ function getSeedPaymentOrder() {
     total: Number(process.env.SEED_PAYMENT_TOTAL || 0),
     paymentReference: process.env.SEED_PAYMENT_REFERENCE || "Imported payment",
     itemName: process.env.SEED_PAYMENT_ITEM_NAME || "Imported paid order",
+    deliveredAt: process.env.SEED_PAYMENT_DELIVERED_AT || null,
+    deliveredBy: process.env.SEED_PAYMENT_DELIVERED_BY || null,
+    deliveryLocation: process.env.SEED_PAYMENT_DELIVERY_LOCATION || null,
+    deliveryNotes: process.env.SEED_PAYMENT_DELIVERY_NOTES || null,
   };
 }
 
@@ -216,6 +220,9 @@ async function initDb() {
       payer_name TEXT,
       transaction_id TEXT,
       delivered_at TIMESTAMPTZ,
+      delivered_by TEXT,
+      delivery_location TEXT,
+      delivery_notes TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
@@ -236,6 +243,9 @@ async function initDb() {
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS payer_name TEXT;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS transaction_id TEXT;
     ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_by TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_location TEXT;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_notes TEXT;
   `);
   await seedPaymentOrder();
   dbReady = true;
@@ -261,9 +271,10 @@ async function seedPaymentOrder() {
     const orderResult = await client.query(
       `INSERT INTO orders (
         customer_id, status, total, address, notes, payment_status, payment_date,
-        payment_reference, payer_name, transaction_id, created_at
+        payment_reference, payer_name, transaction_id, delivered_at,
+        delivered_by, delivery_location, delivery_notes, created_at
        )
-       VALUES ($1, 'Paid', $2, $3, $4, 'Pending', $5, $6, $7, $8, $5)
+       VALUES ($1, $9, $2, $3, $4, 'Pending', $5, $6, $7, $8, $10, $11, $12, $13, $5)
        RETURNING id`,
       [
         customerId,
@@ -274,6 +285,11 @@ async function seedPaymentOrder() {
         seededPaymentOrder.paymentReference,
         seededPaymentOrder.payerName,
         seededPaymentOrder.transactionId,
+        seededPaymentOrder.deliveredAt ? "Delivered" : "Paid",
+        seededPaymentOrder.deliveredAt,
+        seededPaymentOrder.deliveredBy,
+        seededPaymentOrder.deliveryLocation,
+        seededPaymentOrder.deliveryNotes,
       ]
     );
     await client.query(
@@ -399,6 +415,9 @@ function createMemoryOrder(orderData) {
     payer_name: null,
     transaction_id: null,
     delivered_at: null,
+    delivered_by: null,
+    delivery_location: null,
+    delivery_notes: null,
     created_at: new Date().toISOString(),
   };
   memory.orders.push(order);
@@ -466,6 +485,9 @@ async function listOrders() {
     payer_name: row.payer_name,
     transaction_id: row.transaction_id,
     delivered_at: row.delivered_at,
+    delivered_by: row.delivered_by,
+    delivery_location: row.delivery_location,
+    delivery_notes: row.delivery_notes,
     created_at: row.created_at,
     customer: {
       full_name: row.full_name,
@@ -490,7 +512,7 @@ function seedMemoryPaymentOrder() {
   const order = {
     id: memory.nextOrderId++,
     customer_id: customer.id,
-    status: "Paid",
+    status: seededPaymentOrder.deliveredAt ? "Delivered" : "Paid",
     total: seededPaymentOrder.total,
     address: "Bolivia - department not specified",
     latitude: null,
@@ -501,7 +523,10 @@ function seedMemoryPaymentOrder() {
     payment_reference: seededPaymentOrder.paymentReference,
     payer_name: seededPaymentOrder.payerName,
     transaction_id: seededPaymentOrder.transactionId,
-    delivered_at: null,
+    delivered_at: seededPaymentOrder.deliveredAt,
+    delivered_by: seededPaymentOrder.deliveredBy,
+    delivery_location: seededPaymentOrder.deliveryLocation,
+    delivery_notes: seededPaymentOrder.deliveryNotes,
     created_at: seededPaymentOrder.paymentDate,
   };
   memory.customers.push(customer);
@@ -516,23 +541,36 @@ function seedMemoryPaymentOrder() {
   });
 }
 
-async function updateDelivery(orderId, delivered, deliveredAt) {
+async function updateDelivery(orderId, delivered, deliveredAt, deliveredBy, deliveryLocation, deliveryNotes) {
   const deliveryDate = delivered ? deliveredAt || new Date().toISOString() : null;
   if (!dbReady) {
     const order = memory.orders.find((item) => item.id === Number(orderId));
     if (!order) return null;
     order.status = delivered ? "Delivered" : "Paid";
     order.delivered_at = deliveryDate;
+    order.delivered_by = delivered ? deliveredBy || null : null;
+    order.delivery_location = delivered ? deliveryLocation || null : null;
+    order.delivery_notes = delivered ? deliveryNotes || null : null;
     return order;
   }
 
   const result = await pool.query(
     `UPDATE orders
      SET status = $2,
-         delivered_at = $3
+         delivered_at = $3,
+         delivered_by = $4,
+         delivery_location = $5,
+         delivery_notes = $6
      WHERE id = $1
-     RETURNING id, status, delivered_at`,
-    [orderId, delivered ? "Delivered" : "Paid", deliveryDate]
+     RETURNING id, status, delivered_at, delivered_by, delivery_location, delivery_notes`,
+    [
+      orderId,
+      delivered ? "Delivered" : "Paid",
+      deliveryDate,
+      delivered ? deliveredBy || null : null,
+      delivered ? deliveryLocation || null : null,
+      delivered ? deliveryNotes || null : null,
+    ]
   );
   return result.rows[0] || null;
 }
@@ -602,7 +640,14 @@ app.get("/api/admin/orders", requireAdmin, async (req, res) => {
 
 app.patch("/api/admin/orders/:id/delivery", requireAdmin, async (req, res) => {
   const delivered = Boolean(req.body.delivered);
-  const updated = await updateDelivery(req.params.id, delivered, req.body.deliveredAt);
+  const updated = await updateDelivery(
+    req.params.id,
+    delivered,
+    req.body.deliveredAt,
+    req.body.deliveredBy,
+    req.body.deliveryLocation,
+    req.body.deliveryNotes
+  );
   if (!updated) return res.status(404).json({ ok: false, message: "Order not found." });
   res.json({ ok: true, order: updated });
 });

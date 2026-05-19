@@ -61,11 +61,19 @@ function renderOrders(orders) {
                 </span>
                 <label class="form-label mt-2" for="delivery-${order.id}">Delivery date</label>
                 <input class="form-control form-control-sm" id="delivery-${order.id}" type="date" value="${dateInputValue(order.delivered_at)}">
+                <label class="form-label mt-2" for="delivered-by-${order.id}">Delivered by</label>
+                <input class="form-control form-control-sm" id="delivered-by-${order.id}" type="text" value="${order.delivered_by || ""}" placeholder="Courier or staff name">
+                <label class="form-label mt-2" for="delivery-location-${order.id}">Left at / received by</label>
+                <input class="form-control form-control-sm" id="delivery-location-${order.id}" type="text" value="${order.delivery_location || ""}" placeholder="Reception, front desk, customer, warehouse">
+                <label class="form-label mt-2" for="delivery-notes-${order.id}">Delivery notes</label>
+                <textarea class="form-control form-control-sm" id="delivery-notes-${order.id}" rows="2" placeholder="Where it was left, who received it, condition, confirmation details">${order.delivery_notes || ""}</textarea>
                 <button class="btn btn-primary btn-sm w-100 mt-2" type="button" data-deliver="${order.id}">
                   <i class="bi bi-check2-circle"></i>
                   Mark as delivered
                 </button>
                 ${order.delivered_at ? `<small>Delivered at: ${formatDateTime(order.delivered_at)}</small>` : ""}
+                ${order.delivered_by ? `<small>Delivered by: ${order.delivered_by}</small>` : ""}
+                ${order.delivery_location ? `<small>Left at / received by: ${order.delivery_location}</small>` : ""}
               </div>
             </div>
             <div>
@@ -108,13 +116,16 @@ ordersEl.addEventListener("click", async (event) => {
   if (!button) return;
   const orderId = button.dataset.deliver;
   const deliveredAt = document.querySelector(`#delivery-${orderId}`).value;
+  const deliveredBy = document.querySelector(`#delivered-by-${orderId}`).value.trim();
+  const deliveryLocation = document.querySelector(`#delivery-location-${orderId}`).value.trim();
+  const deliveryNotes = document.querySelector(`#delivery-notes-${orderId}`).value.trim();
   button.disabled = true;
   button.textContent = "Saving...";
   try {
     const response = await fetch(`/api/admin/orders/${orderId}/delivery`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delivered: true, deliveredAt }),
+      body: JSON.stringify({ delivered: true, deliveredAt, deliveredBy, deliveryLocation, deliveryNotes }),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Delivery could not be updated.");
