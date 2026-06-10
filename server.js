@@ -186,7 +186,7 @@ const simulatedOrders = [
 
 let pool;
 let dbReady = false;
-const memory = { customers: [], orders: [], items: [], nextCustomerId: 1, nextOrderId: 1 };
+const memory = { customers: [], orders: [], items: [], softwareLeads: [], nextCustomerId: 1, nextOrderId: 1, nextLeadId: 1 };
 const upload = multer({
   dest: path.join(__dirname, "public", "uploads"),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -340,6 +340,19 @@ async function initDb() {
       unit_price NUMERIC(10,2) NOT NULL,
       quantity INTEGER NOT NULL,
       line_total NUMERIC(10,2) NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS software_leads (
+      id SERIAL PRIMARY KEY,
+      full_name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      email TEXT NOT NULL,
+      service TEXT NOT NULL,
+      timeline TEXT NOT NULL,
+      estimate NUMERIC(10,2),
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'New',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
   await pool.query(`
@@ -670,6 +683,61 @@ async function listOrders() {
       email: row.email,
     },
     items: row.items,
+  }));
+}
+
+async function createSoftwareLead(payload) {
+  const allowedServices = new Set(["ecommerce", "crm", "dashboard", "portal"]);
+  const allowedTimelines = new Set(["standard", "fast", "full"]);
+  const fullName = String(payload.name || payload.fullName || "").trim();
+  const phone = String(payload.phone || "").trim();
+  const email = String(payload.email || "").trim().toLowerCase();
+  const service = allowedServices.has(payload.service) ? payload.service : "ecommerce";
+  const timeline = allowedTimelines.has(payload.timeline) ? payload.timeline : "standard";
+  const estimate = Number(payload.estimate) || null;
+  const notes = String(payload.notes || "").trim();
+
+  if (!fullName || !phone || !email) {
+    const error = new Error("Name, phone and email are required.");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!dbReady) {
+    const lead = {
+      id: memory.nextLeadId++,
+      full_name: fullName,
+      phone,
+      email,
+      service,
+      timeline,
+      estimate,
+      notes,
+      status: "New",
+      created_at: new Date().toISOString(),
+    };
+    memory.softwareLeads.push(lead);
+    return lead;
+  }
+
+  const result = await pool.query(
+    `INSERT INTO software_leads (full_name, phone, email, service, timeline, estimate, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING *`,
+    [fullName, phone, email, service, timeline, estimate, notes]
+  );
+  return result.rows[0];
+}
+
+async function listSoftwareLeads() {
+  if (!dbReady) {
+    return memory.softwareLeads.slice().reverse();
+  }
+
+  const result = await pool.query("SELECT * FROM software_leads ORDER BY created_at DESC");
+  return result.rows.map((lead) => ({
+    ...lead,
+    estimate: lead.estimate === null ? null : Number(lead.estimate),
   }));
 }
 
@@ -1035,9 +1103,23 @@ app.post("/api/orders", upload.single("receipt"), async (req, res) => {
   }
 });
 
+app.post("/api/software-leads", async (req, res) => {
+  try {
+    const lead = await createSoftwareLead(req.body);
+    res.status(201).json({ ok: true, leadId: lead.id });
+  } catch (error) {
+    res.status(error.status || 500).json({ ok: false, message: error.message || "Software request could not be sent." });
+  }
+});
+
 app.get("/api/admin/orders", requireAdmin, async (req, res) => {
   const orders = await listOrders();
   res.json({ ok: true, database: dbReady ? "postgres" : "memory-demo", orders });
+});
+
+app.get("/api/admin/software-leads", requireAdmin, async (req, res) => {
+  const leads = await listSoftwareLeads();
+  res.json({ ok: true, database: dbReady ? "postgres" : "memory-demo", leads });
 });
 
 app.post("/api/admin/orders/manual", requireAdmin, async (req, res) => {

@@ -1,10 +1,32 @@
 const ordersEl = document.querySelector("#orders");
+const softwareLeadsEl = document.querySelector("#softwareLeads");
 const orderCountEl = document.querySelector("#orderCount");
+const leadCountEl = document.querySelector("#leadCount");
 const dbModeEl = document.querySelector("#dbMode");
 const logoutButton = document.querySelector("#logoutButton");
 const manualOrderForm = document.querySelector("#manualOrderForm");
 const manualOrderMessage = document.querySelector("#manualOrderMessage");
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const serviceLabels = {
+  ecommerce: "Tienda online",
+  crm: "CRM y operaciones",
+  dashboard: "Dashboard y reportes",
+  portal: "Portal o app web",
+};
+const timelineLabels = {
+  standard: "Proyecto estandar",
+  fast: "Lanzamiento rapido",
+  full: "Sistema completo a medida",
+};
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function mapPanel(order) {
   const latitude = Number(order.latitude);
@@ -138,6 +160,49 @@ function renderOrders(orders) {
     .join("");
 }
 
+function renderSoftwareLeads(leads) {
+  leadCountEl.textContent = leads.length;
+  if (!leads.length) {
+    softwareLeadsEl.innerHTML = `<div class="order-card">No software requests yet.</div>`;
+    return;
+  }
+
+  softwareLeadsEl.innerHTML = leads
+    .map(
+      (lead) => `
+        <article class="order-card software-lead-card">
+          <div class="order-top">
+            <div>
+              <span class="badge-soft">${escapeHtml(lead.status || "New")}</span>
+              <h2>Lead #${lead.id} - ${escapeHtml(serviceLabels[lead.service] || lead.service)}</h2>
+              <small>${new Date(lead.created_at).toLocaleString()}</small>
+            </div>
+            <div class="order-total">${lead.estimate ? money.format(lead.estimate) : "Quote"}</div>
+          </div>
+          <div class="order-grid">
+            <div>
+              <div class="order-label">Client</div>
+              <strong>${escapeHtml(lead.full_name)}</strong><br>
+              <span>${escapeHtml(lead.phone)}</span><br>
+              <span>${escapeHtml(lead.email)}</span>
+            </div>
+            <div>
+              <div class="order-label">Request</div>
+              <p class="mb-1"><strong>${escapeHtml(serviceLabels[lead.service] || lead.service)}</strong></p>
+              <p class="mb-1">${escapeHtml(timelineLabels[lead.timeline] || lead.timeline)}</p>
+              <p class="mb-0">Initial estimate: ${lead.estimate ? money.format(lead.estimate) : "Pending"}</p>
+            </div>
+            <div>
+              <div class="order-label">Notes</div>
+              <p class="mb-0">${escapeHtml(lead.notes || "No notes provided.")}</p>
+            </div>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
 async function loadOrders() {
   try {
     const response = await fetch("/api/admin/orders");
@@ -151,6 +216,21 @@ async function loadOrders() {
     renderOrders(result.orders);
   } catch (error) {
     ordersEl.innerHTML = `<div class="order-card text-danger">${error.message}</div>`;
+  }
+}
+
+async function loadSoftwareLeads() {
+  try {
+    const response = await fetch("/api/admin/software-leads");
+    const result = await response.json();
+    if (response.status === 401) {
+      window.location.href = "/admin";
+      return;
+    }
+    if (!response.ok) throw new Error(result.message || "Software requests could not be loaded.");
+    renderSoftwareLeads(result.leads);
+  } catch (error) {
+    softwareLeadsEl.innerHTML = `<div class="order-card text-danger">${error.message}</div>`;
   }
 }
 
@@ -208,3 +288,4 @@ logoutButton.addEventListener("click", async () => {
 });
 
 loadOrders();
+loadSoftwareLeads();

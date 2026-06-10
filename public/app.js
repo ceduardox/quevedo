@@ -266,7 +266,34 @@ function setupSoftwareDemos() {
   quoteForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const formData = new FormData(quoteForm);
-    updateQuote(String(formData.get("name") || "").trim());
+    const name = String(formData.get("name") || "").trim();
+    updateQuote(name);
+    quoteResult.textContent = "Enviando solicitud...";
+    fetch("/api/software-leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        phone: String(formData.get("phone") || "").trim(),
+        email: String(formData.get("email") || "").trim(),
+        service: quoteService.value,
+        timeline: quoteTimeline.value,
+        notes: String(formData.get("notes") || "").trim(),
+        estimate: getQuoteEstimate(),
+      }),
+    })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "No se pudo enviar la solicitud.");
+        quoteResult.textContent = `Solicitud #${result.leadId} recibida. Te contactaremos por telefono o email para ajustar la cotizacion.`;
+        quoteForm.elements.name.value = "";
+        quoteForm.elements.phone.value = "";
+        quoteForm.elements.email.value = "";
+        quoteForm.elements.notes.value = "";
+      })
+      .catch((error) => {
+        quoteResult.textContent = error.message;
+      });
   });
 
   updateQuote();
