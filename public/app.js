@@ -9,6 +9,56 @@ const cartItemsEl = document.querySelector("#cartItems");
 const checkoutButton = document.querySelector("#checkoutButton");
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const CART_KEY = "eq_home_cart_v1";
+const softwareDemos = {
+  ecommerce: {
+    title: "Ecommerce and checkout",
+    label: "Cart conversion",
+    metric: "$12.4k",
+    detail: "Live catalog, cart, checkout and admin orders.",
+    bars: ["58%", "82%", "46%"],
+    items: ["Product filters", "Delivery location", "Admin order queue"],
+    copy: "A simple online sales flow: customers browse, add products, pay or request delivery, and the business reviews every order from an admin panel.",
+    linkText: "Open ecommerce demo",
+    linkHref: "#products",
+    estimate: 1800,
+  },
+  crm: {
+    title: "CRM and operations",
+    label: "Lead pipeline",
+    metric: "34",
+    detail: "New leads organized by status, owner and next action.",
+    bars: ["42%", "68%", "88%"],
+    items: ["Kanban stages", "Customer notes", "Follow-up reminders"],
+    copy: "A CRM demo for sales and operations teams: assign prospects, track conversations, move deals and keep work visible.",
+    linkText: "Generate CRM quote",
+    linkHref: "#quoteForm",
+    estimate: 2400,
+  },
+  dashboard: {
+    title: "Dashboard and reports",
+    label: "Monthly insight",
+    metric: "+18%",
+    detail: "KPIs, inventory, sales and finance views in one place.",
+    bars: ["64%", "38%", "92%"],
+    items: ["Sales charts", "Inventory alerts", "Exportable reports"],
+    copy: "A reporting demo for owners and managers who need clean numbers, fast filters and mobile-friendly summaries.",
+    linkText: "Generate dashboard quote",
+    linkHref: "#quoteForm",
+    estimate: 2100,
+  },
+  portal: {
+    title: "Web app or portal",
+    label: "Client access",
+    metric: "4.8",
+    detail: "Private logins, requests, files and workflow screens.",
+    bars: ["76%", "52%", "70%"],
+    items: ["User accounts", "Request forms", "Admin approvals"],
+    copy: "A portal demo for booking, client access, internal operations or custom business workflows with clear UI/UX.",
+    linkText: "Generate portal quote",
+    linkHref: "#quoteForm",
+    estimate: 2600,
+  },
+};
 
 function loadCart() {
   try {
@@ -108,6 +158,76 @@ checkoutButton.addEventListener("click", () => {
   window.location.href = "/checkout";
 });
 
+function setupSoftwareDemos() {
+  const tabs = document.querySelectorAll("[data-demo-service]");
+  const stage = document.querySelector("#demoStage");
+  const title = document.querySelector("#demoTitle");
+  const label = document.querySelector("#demoLabel");
+  const metric = document.querySelector("#demoMetric");
+  const detail = document.querySelector("#demoDetail");
+  const visual = document.querySelector("#demoVisual");
+  const list = document.querySelector("#demoList");
+  const copy = document.querySelector("#demoCopy");
+  const link = document.querySelector("#demoLink");
+  const quoteForm = document.querySelector("#quoteForm");
+  const quoteService = document.querySelector("#quoteService");
+  const quoteTimeline = document.querySelector("#quoteTimeline");
+  const quoteResult = document.querySelector("#quoteResult");
+
+  if (!tabs.length || !stage || !quoteForm) return;
+
+  function renderDemo(serviceKey) {
+    const demo = softwareDemos[serviceKey] || softwareDemos.ecommerce;
+    stage.classList.add("is-changing");
+    tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.demoService === serviceKey));
+    setTimeout(() => {
+      title.textContent = demo.title;
+      label.textContent = demo.label;
+      metric.textContent = demo.metric;
+      detail.textContent = demo.detail;
+      visual.innerHTML = demo.bars.map((height) => `<span style="--height: ${height}"></span>`).join("");
+      list.innerHTML = demo.items.map((item) => `<span><i class="bi bi-check-circle-fill"></i> ${item}</span>`).join("");
+      copy.textContent = demo.copy;
+      link.textContent = demo.linkText;
+      link.href = demo.linkHref;
+      quoteService.value = serviceKey;
+      updateQuote();
+      stage.classList.remove("is-changing");
+    }, 180);
+  }
+
+  function getQuoteEstimate() {
+    const demo = softwareDemos[quoteService.value] || softwareDemos.ecommerce;
+    const timelineMultiplier = {
+      standard: 1,
+      fast: 1.25,
+      full: 1.65,
+    };
+    return Math.round(demo.estimate * (timelineMultiplier[quoteTimeline.value] || 1));
+  }
+
+  function updateQuote(name = "") {
+    const selected = softwareDemos[quoteService.value] || softwareDemos.ecommerce;
+    const estimate = money.format(getQuoteEstimate());
+    const prefix = name ? `${name}, ` : "";
+    quoteResult.textContent = `${prefix}${selected.title} starts around ${estimate}. Final quote depends on integrations, users, content and launch timing.`;
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => renderDemo(tab.dataset.demoService));
+  });
+
+  quoteService.addEventListener("change", () => renderDemo(quoteService.value));
+  quoteTimeline.addEventListener("change", () => updateQuote());
+  quoteForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const formData = new FormData(quoteForm);
+    updateQuote(String(formData.get("name") || "").trim());
+  });
+
+  updateQuote();
+}
+
 function getCartRows() {
   return products
     .map((product) => ({ product, quantity: cart.get(product.id) || 0 }))
@@ -156,3 +276,4 @@ function updateCart() {
 }
 
 loadProducts();
+setupSoftwareDemos();

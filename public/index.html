@@ -97,29 +97,93 @@
             View ecommerce demo
           </a>
         </div>
-        <div class="software-grid">
-          <article class="software-card software-card-featured">
-            <span class="software-icon"><i class="bi bi-cart-check"></i></span>
-            <p class="eyebrow">Live demo</p>
-            <h3>Ecommerce and checkout</h3>
-            <p>Online catalog, cart drawer, dedicated checkout, delivery location and admin order tracking for product businesses.</p>
-            <a href="#products">Explore store flow</a>
-          </article>
-          <article class="software-card">
-            <span class="software-icon"><i class="bi bi-kanban"></i></span>
-            <h3>CRM and operations</h3>
-            <p>Lead pipelines, customer records, task boards, roles, alerts and admin panels designed for daily team use.</p>
-          </article>
-          <article class="software-card">
-            <span class="software-icon"><i class="bi bi-graph-up-arrow"></i></span>
-            <h3>Dashboards and reports</h3>
-            <p>Sales metrics, inventory views, finance summaries and mobile-friendly reporting screens for fast decisions.</p>
-          </article>
-          <article class="software-card">
-            <span class="software-icon"><i class="bi bi-phone"></i></span>
-            <h3>Web apps and portals</h3>
-            <p>Booking systems, client portals, internal tools and responsive interfaces with simple paths from action to result.</p>
-          </article>
+        <div class="software-demo-shell">
+          <div class="software-demo-panel">
+            <div class="software-tabs" role="tablist" aria-label="Software service demos">
+              <button class="software-tab active" type="button" data-demo-service="ecommerce">
+                <i class="bi bi-cart-check"></i>
+                Ecommerce
+              </button>
+              <button class="software-tab" type="button" data-demo-service="crm">
+                <i class="bi bi-kanban"></i>
+                CRM
+              </button>
+              <button class="software-tab" type="button" data-demo-service="dashboard">
+                <i class="bi bi-graph-up-arrow"></i>
+                Dashboard
+              </button>
+              <button class="software-tab" type="button" data-demo-service="portal">
+                <i class="bi bi-phone"></i>
+                Portal
+              </button>
+            </div>
+            <div class="demo-window" aria-live="polite">
+              <div class="demo-window-top">
+                <span></span>
+                <span></span>
+                <span></span>
+                <strong id="demoTitle">Ecommerce and checkout</strong>
+              </div>
+              <div class="demo-stage" id="demoStage">
+                <div class="demo-card demo-card-main">
+                  <small id="demoLabel">Cart conversion</small>
+                  <strong id="demoMetric">$12.4k</strong>
+                  <span id="demoDetail">Live catalog, cart, checkout and admin orders.</span>
+                </div>
+                <div class="demo-visual" id="demoVisual" aria-hidden="true">
+                  <span style="--height: 58%"></span>
+                  <span style="--height: 82%"></span>
+                  <span style="--height: 46%"></span>
+                </div>
+                <div class="demo-list" id="demoList">
+                  <span><i class="bi bi-check-circle-fill"></i> Product filters</span>
+                  <span><i class="bi bi-check-circle-fill"></i> Delivery location</span>
+                  <span><i class="bi bi-check-circle-fill"></i> Admin order queue</span>
+                </div>
+              </div>
+            </div>
+            <div class="software-demo-copy">
+              <p id="demoCopy">A simple online sales flow: customers browse, add products, pay or request delivery, and the business reviews every order from an admin panel.</p>
+              <a id="demoLink" href="#products">Open ecommerce demo</a>
+            </div>
+          </div>
+
+          <form class="quote-card" id="quoteForm">
+            <p class="eyebrow">Quick quote</p>
+            <h3>Request a software quote</h3>
+            <label>
+              Name
+              <input class="form-control" name="name" type="text" placeholder="Your company or name" required />
+            </label>
+            <label>
+              Service
+              <select class="form-control" name="service" id="quoteService">
+                <option value="ecommerce">Ecommerce store</option>
+                <option value="crm">CRM and operations</option>
+                <option value="dashboard">Dashboard and reports</option>
+                <option value="portal">Web app or portal</option>
+              </select>
+            </label>
+            <label>
+              Timeline
+              <select class="form-control" name="timeline" id="quoteTimeline">
+                <option value="standard">Standard build</option>
+                <option value="fast">Fast launch</option>
+                <option value="full">Full custom system</option>
+              </select>
+            </label>
+            <label>
+              Notes
+              <textarea class="form-control" name="notes" rows="3" placeholder="Products, users, payments, reports, integrations..."></textarea>
+            </label>
+            <button class="btn btn-primary w-100" type="submit">
+              <i class="bi bi-send"></i>
+              Generate quote
+            </button>
+            <div class="quote-result" id="quoteResult" aria-live="polite">
+              Select a service to see a starting estimate.
+            </div>
+          </form>
         </div>
       </section>
 
