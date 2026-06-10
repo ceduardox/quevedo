@@ -11,52 +11,96 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 const CART_KEY = "eq_home_cart_v1";
 const softwareDemos = {
   ecommerce: {
-    title: "Ecommerce and checkout",
-    label: "Cart conversion",
-    metric: "$12.4k",
-    detail: "Live catalog, cart, checkout and admin orders.",
-    bars: ["58%", "82%", "46%"],
-    items: ["Product filters", "Delivery location", "Admin order queue"],
-    copy: "A simple online sales flow: customers browse, add products, pay or request delivery, and the business reviews every order from an admin panel.",
-    linkText: "Open ecommerce demo",
+    title: "Tienda online + checkout",
+    label: "Vender sin friccion",
+    metric: "24/7",
+    detail: "Catalogo, carrito, pagos, delivery y panel de pedidos para vender todos los dias.",
+    items: ["Catalogo de productos y filtros", "Carrito, checkout y comprobantes", "Panel admin para pedidos y entregas"],
+    copy: "Ideal para negocios que quieren vender en linea con una experiencia clara: el cliente compra rapido y el equipo administra pedidos sin depender de mensajes manuales.",
+    linkText: "Ver tienda real",
     linkHref: "#products",
+    quoteName: "tienda online",
     estimate: 1800,
+    visualHtml: `
+      <div class="mini-store">
+        <div class="mini-store-head"><strong>Store</strong><span>Checkout ready</span></div>
+        <div class="mini-products">
+          <div class="mini-product"><i class="bi bi-box-seam"></i><b>$750</b></div>
+          <div class="mini-product"><i class="bi bi-droplet"></i><b>$180</b></div>
+          <div class="mini-product"><i class="bi bi-lightning-charge"></i><b>$590</b></div>
+        </div>
+        <div class="mini-checkout">
+          <span class="done">Cart</span>
+          <span class="done">Pay</span>
+          <span class="active">Admin</span>
+        </div>
+      </div>
+    `,
   },
   crm: {
-    title: "CRM and operations",
-    label: "Lead pipeline",
-    metric: "34",
-    detail: "New leads organized by status, owner and next action.",
-    bars: ["42%", "68%", "88%"],
-    items: ["Kanban stages", "Customer notes", "Follow-up reminders"],
-    copy: "A CRM demo for sales and operations teams: assign prospects, track conversations, move deals and keep work visible.",
-    linkText: "Generate CRM quote",
+    title: "CRM y operaciones",
+    label: "Seguimiento comercial",
+    metric: "+34",
+    detail: "Leads, clientes, tareas y estados para que ningun contacto se pierda.",
+    items: ["Pipeline por etapas y responsables", "Historial de contacto y proximas acciones", "Alertas para ventas, soporte y operaciones"],
+    copy: "Para equipos que atienden clientes por WhatsApp, llamadas o formularios y necesitan ordenar el seguimiento, medir avance y cerrar oportunidades con menos caos.",
+    linkText: "Cotizar CRM",
     linkHref: "#quoteForm",
+    quoteName: "CRM",
     estimate: 2400,
+    visualHtml: `
+      <div class="mini-crm">
+        <div class="crm-column"><strong>Nuevo</strong><span class="lead-card">Lead web</span><span class="lead-card">Cotizacion</span></div>
+        <div class="crm-column"><strong>En proceso</strong><span class="lead-card hot">Demo agendada</span><span class="lead-card">Llamar hoy</span></div>
+        <div class="crm-column"><strong>Cierre</strong><span class="lead-card won">Contrato</span></div>
+      </div>
+    `,
   },
   dashboard: {
-    title: "Dashboard and reports",
-    label: "Monthly insight",
+    title: "Dashboards y reportes",
+    label: "Decisiones con datos",
     metric: "+18%",
-    detail: "KPIs, inventory, sales and finance views in one place.",
-    bars: ["64%", "38%", "92%"],
-    items: ["Sales charts", "Inventory alerts", "Exportable reports"],
-    copy: "A reporting demo for owners and managers who need clean numbers, fast filters and mobile-friendly summaries.",
-    linkText: "Generate dashboard quote",
+    detail: "Ventas, inventario, finanzas y rendimiento visibles en una sola pantalla.",
+    items: ["KPIs gerenciales en tiempo real", "Reportes filtrables por fecha, sede o vendedor", "Alertas de inventario, pagos y resultados"],
+    copy: "Para gerentes y propietarios que necesitan ver que esta pasando sin pedir hojas de calculo: metricas claras, filtros rapidos y reportes listos para compartir.",
+    linkText: "Cotizar dashboard",
     linkHref: "#quoteForm",
+    quoteName: "dashboard",
     estimate: 2100,
+    visualHtml: `
+      <div class="mini-dashboard">
+        <div class="kpi-row"><span><b>$48k</b>Ventas</span><span><b>92%</b>Stock</span></div>
+        <div class="chart-bars">
+          <i style="--bar: 44%"></i>
+          <i style="--bar: 76%"></i>
+          <i style="--bar: 58%"></i>
+          <i style="--bar: 88%"></i>
+        </div>
+        <div class="trend-line"><span></span><span></span><span></span></div>
+      </div>
+    `,
   },
   portal: {
-    title: "Web app or portal",
-    label: "Client access",
-    metric: "4.8",
-    detail: "Private logins, requests, files and workflow screens.",
-    bars: ["76%", "52%", "70%"],
-    items: ["User accounts", "Request forms", "Admin approvals"],
-    copy: "A portal demo for booking, client access, internal operations or custom business workflows with clear UI/UX.",
-    linkText: "Generate portal quote",
+    title: "Portales y apps web",
+    label: "Acceso para clientes",
+    metric: "1 login",
+    detail: "Usuarios, solicitudes, archivos, estados y aprobaciones en una app privada.",
+    items: ["Login para clientes, alumnos o proveedores", "Formularios, tickets y aprobaciones", "Panel administrativo y permisos por rol"],
+    copy: "Para empresas que quieren dejar de operar por archivos sueltos y mensajes dispersos: un portal centraliza solicitudes, documentos, estados y comunicacion.",
+    linkText: "Cotizar portal",
     linkHref: "#quoteForm",
+    quoteName: "portal web",
     estimate: 2600,
+    visualHtml: `
+      <div class="mini-portal">
+        <div class="phone-frame">
+          <div class="phone-top"></div>
+          <div class="phone-card active">Solicitud recibida</div>
+          <div class="phone-card">Archivo cargado</div>
+          <button type="button">Aprobar</button>
+        </div>
+      </div>
+    `,
   },
 };
 
@@ -185,7 +229,7 @@ function setupSoftwareDemos() {
       label.textContent = demo.label;
       metric.textContent = demo.metric;
       detail.textContent = demo.detail;
-      visual.innerHTML = demo.bars.map((height) => `<span style="--height: ${height}"></span>`).join("");
+      visual.innerHTML = demo.visualHtml;
       list.innerHTML = demo.items.map((item) => `<span><i class="bi bi-check-circle-fill"></i> ${item}</span>`).join("");
       copy.textContent = demo.copy;
       link.textContent = demo.linkText;
@@ -210,7 +254,7 @@ function setupSoftwareDemos() {
     const selected = softwareDemos[quoteService.value] || softwareDemos.ecommerce;
     const estimate = money.format(getQuoteEstimate());
     const prefix = name ? `${name}, ` : "";
-    quoteResult.textContent = `${prefix}${selected.title} starts around ${estimate}. Final quote depends on integrations, users, content and launch timing.`;
+    quoteResult.textContent = `${prefix}un proyecto de ${selected.quoteName} puede iniciar cerca de ${estimate}. La cotizacion final depende de usuarios, integraciones, contenido, automatizaciones y tiempos de entrega.`;
   }
 
   tabs.forEach((tab) => {

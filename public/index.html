@@ -42,13 +42,13 @@
       <div class="container hero-content">
         <div class="row align-items-end g-4">
           <div class="col-lg-7">
-            <p class="eyebrow">Products, ecommerce and custom software</p>
-            <h1>Upgrade your space and your digital sales experience.</h1>
-            <p class="lead">Shop premium kitchen and bath products, or request ecommerce, business apps, dashboards and UI/UX software demos built around your workflow.</p>
+            <p class="eyebrow">Productos, ecommerce y desarrollo de software</p>
+            <h1>Vendemos productos y construimos software para hacer crecer negocios.</h1>
+            <p class="lead">Compra productos premium o solicita sistemas a medida: ecommerce, CRM, dashboards y portales web con buena UI/UX y enfoque comercial.</p>
             <div class="hero-actions">
-              <a class="btn btn-light btn-lg" href="#products">Shop Collection</a>
-              <a class="btn btn-outline-light btn-lg" href="#software">Software Demos</a>
-              <button class="btn btn-outline-light btn-lg" type="button" data-add-combo>Build $1,500 Pro Set</button>
+              <a class="btn btn-light btn-lg" href="#software">Ver servicios de software</a>
+              <a class="btn btn-outline-light btn-lg" href="#products">Ver productos</a>
+              <button class="btn btn-outline-light btn-lg" type="button" data-add-combo>Armar set de $1,500</button>
             </div>
           </div>
           <div class="col-lg-4 offset-lg-1">
@@ -81,20 +81,21 @@
         </div>
         <div>
           <i class="bi bi-window-stack"></i>
-          <strong>Software demos</strong>
-          <span>Ecommerce, CRM and dashboards</span>
+          <strong>Software a medida</strong>
+          <span>Ecommerce, CRM y dashboards</span>
         </div>
       </section>
 
       <section class="container py-5 software-section" id="software">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Software development</p>
-            <h2>Custom software with clean UI and practical UX</h2>
+            <p class="eyebrow">Empresa de software</p>
+            <h2>Desarrollamos sistemas que venden, ordenan y automatizan tu negocio</h2>
+            <p class="section-intro">Creamos ecommerce, CRM, dashboards y portales web con una interfaz clara, pensada para que tus clientes compren y tu equipo trabaje mejor.</p>
           </div>
           <a class="btn btn-dark" href="#products">
             <i class="bi bi-bag-check"></i>
-            View ecommerce demo
+            Ver ecommerce real
           </a>
         </div>
         <div class="software-demo-shell">
@@ -122,66 +123,77 @@
                 <span></span>
                 <span></span>
                 <span></span>
-                <strong id="demoTitle">Ecommerce and checkout</strong>
+                <strong id="demoTitle">Tienda online + checkout</strong>
               </div>
               <div class="demo-stage" id="demoStage">
                 <div class="demo-card demo-card-main">
-                  <small id="demoLabel">Cart conversion</small>
-                  <strong id="demoMetric">$12.4k</strong>
-                  <span id="demoDetail">Live catalog, cart, checkout and admin orders.</span>
+                  <small id="demoLabel">Vender sin friccion</small>
+                  <strong id="demoMetric">24/7</strong>
+                  <span id="demoDetail">Catalogo, carrito, pagos, delivery y panel de pedidos para vender todos los dias.</span>
                 </div>
                 <div class="demo-visual" id="demoVisual" aria-hidden="true">
-                  <span style="--height: 58%"></span>
-                  <span style="--height: 82%"></span>
-                  <span style="--height: 46%"></span>
+                  <div class="mini-store">
+                    <div class="mini-store-head"><strong>Store</strong><span>Checkout ready</span></div>
+                    <div class="mini-products">
+                      <div class="mini-product"><i class="bi bi-box-seam"></i><b>$750</b></div>
+                      <div class="mini-product"><i class="bi bi-droplet"></i><b>$180</b></div>
+                      <div class="mini-product"><i class="bi bi-lightning-charge"></i><b>$590</b></div>
+                    </div>
+                    <div class="mini-checkout">
+                      <span class="done">Cart</span>
+                      <span class="done">Pay</span>
+                      <span class="active">Admin</span>
+                    </div>
+                  </div>
                 </div>
                 <div class="demo-list" id="demoList">
-                  <span><i class="bi bi-check-circle-fill"></i> Product filters</span>
-                  <span><i class="bi bi-check-circle-fill"></i> Delivery location</span>
-                  <span><i class="bi bi-check-circle-fill"></i> Admin order queue</span>
+                  <span><i class="bi bi-check-circle-fill"></i> Catalogo de productos y filtros</span>
+                  <span><i class="bi bi-check-circle-fill"></i> Carrito, checkout y comprobantes</span>
+                  <span><i class="bi bi-check-circle-fill"></i> Panel admin para pedidos y entregas</span>
                 </div>
               </div>
             </div>
             <div class="software-demo-copy">
-              <p id="demoCopy">A simple online sales flow: customers browse, add products, pay or request delivery, and the business reviews every order from an admin panel.</p>
-              <a id="demoLink" href="#products">Open ecommerce demo</a>
+              <p id="demoCopy">Ideal para negocios que quieren vender en linea con una experiencia clara: el cliente compra rapido y el equipo administra pedidos sin depender de mensajes manuales.</p>
+              <a id="demoLink" href="#products">Ver tienda real</a>
             </div>
           </div>
 
           <form class="quote-card" id="quoteForm">
-            <p class="eyebrow">Quick quote</p>
-            <h3>Request a software quote</h3>
+            <p class="eyebrow">Cotizacion rapida</p>
+            <h3>Cuentanos que sistema necesitas</h3>
+            <p>Elige un servicio y genera una estimacion inicial. Luego se ajusta segun alcance, integraciones y tiempo de entrega.</p>
             <label>
-              Name
-              <input class="form-control" name="name" type="text" placeholder="Your company or name" required />
+              Nombre o empresa
+              <input class="form-control" name="name" type="text" placeholder="Tu empresa o nombre" required />
             </label>
             <label>
-              Service
+              Servicio
               <select class="form-control" name="service" id="quoteService">
-                <option value="ecommerce">Ecommerce store</option>
-                <option value="crm">CRM and operations</option>
-                <option value="dashboard">Dashboard and reports</option>
-                <option value="portal">Web app or portal</option>
+                <option value="ecommerce">Tienda online</option>
+                <option value="crm">CRM y operaciones</option>
+                <option value="dashboard">Dashboard y reportes</option>
+                <option value="portal">Portal o app web</option>
               </select>
             </label>
             <label>
-              Timeline
+              Alcance
               <select class="form-control" name="timeline" id="quoteTimeline">
-                <option value="standard">Standard build</option>
-                <option value="fast">Fast launch</option>
-                <option value="full">Full custom system</option>
+                <option value="standard">Proyecto estandar</option>
+                <option value="fast">Lanzamiento rapido</option>
+                <option value="full">Sistema completo a medida</option>
               </select>
             </label>
             <label>
-              Notes
-              <textarea class="form-control" name="notes" rows="3" placeholder="Products, users, payments, reports, integrations..."></textarea>
+              Detalles
+              <textarea class="form-control" name="notes" rows="3" placeholder="Usuarios, pagos, reportes, integraciones, roles..."></textarea>
             </label>
             <button class="btn btn-primary w-100" type="submit">
               <i class="bi bi-send"></i>
-              Generate quote
+              Generar estimacion
             </button>
             <div class="quote-result" id="quoteResult" aria-live="polite">
-              Select a service to see a starting estimate.
+              Selecciona un servicio para ver una estimacion inicial.
             </div>
           </form>
         </div>
