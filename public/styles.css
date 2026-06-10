@@ -132,7 +132,7 @@ body {
   position: relative;
   z-index: 3;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   background: white;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -165,6 +165,77 @@ body {
 .ecommerce-strip span {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.software-section {
+  scroll-margin-top: 94px;
+}
+
+.software-grid {
+  display: grid;
+  grid-template-columns: 1.25fr repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.software-card {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 18px 40px rgba(23, 23, 23, 0.06);
+}
+
+.software-card-featured {
+  background: var(--charcoal);
+  color: white;
+}
+
+.software-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.software-card p:not(.eyebrow) {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.software-card-featured p:not(.eyebrow) {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.software-card a {
+  margin-top: auto;
+  color: var(--green);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.software-card-featured a {
+  color: white;
+}
+
+.software-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--green);
+  font-size: 1.35rem;
+}
+
+.software-card-featured .software-icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
 }
 
 .section-heading,
@@ -985,7 +1056,8 @@ body {
   .order-grid,
   .ecommerce-strip,
   .checkout-layout,
-  .product-detail-grid {
+  .product-detail-grid,
+  .software-grid {
     grid-template-columns: 1fr;
   }
 
